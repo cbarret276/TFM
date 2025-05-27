@@ -1,0 +1,40 @@
+services:
+
+  # ======================================
+  # Service: Elasticsearch
+  # ======================================
+
+  elasticsearch:
+    build: ./elastic/.
+    container_name: elastic-container
+    ports:
+      - 9200:9200 # REST API port for Elasticsearch
+    volumes:
+      - ./elastic/data:/usr/share/elasticsearch/data  # Mount persistent volume for index storage
+
+  # ======================================
+  # Service: Apache Airflow
+  # ======================================  
+  airflow:
+    build: ./airflow/. 
+    container_name: airflow-container
+    env_file:
+      - .env  # Fichero con las claves de las APIs a utilizar
+    ports:
+      - "8080:8080" # Web UI port for Airflow
+    depends_on:
+      - elasticsearch    # Wait for Elasticsearch to become available
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags  # Mount custom DAGs from host into Airflow container
+
+  # ======================================
+  # Service: Kibana
+  # ======================================
+  kibana:
+    build: ./kibana/.
+    container_name: kibana-container
+    ports:
+      - "5601:5601"  # Kibana Web UI port
+    depends_on:
+      - elasticsearch  # Wait until Elasticsearch is running
+

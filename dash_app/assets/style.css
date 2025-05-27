@@ -1,0 +1,251 @@
+.dash-container, .dbc {
+  min-width: 340px;
+}
+
+/* Sidebar: base style */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 5rem;
+  padding: 2rem 1rem;
+  z-index: 50;
+  transition: width 0.1s ease-in-out;
+}
+
+/* Expand sidebar on hover */
+.sidebar:hover {
+  width: 16rem;
+}
+
+/* Sidebar header alignment and overflow */
+.sidebar-header {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* Sidebar logo rounding */
+.sidebar-header img {
+  border-radius: var(--bs-border-radius);
+}
+/* Hide header title by default */
+.sidebar-header h2 {
+  opacity: 0;
+  margin-left: 1rem;
+  margin-bottom: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+/* Show header title on hover */
+.sidebar:hover .sidebar-header h2 {
+  opacity: 1;
+}
+/* Navigation links in sidebar */
+.sidebar .nav-link {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+/* Icon spacing */
+.sidebar .nav-link i {
+  width: 1rem;
+}
+/* Hide nav labels by default */
+.sidebar .nav-link span {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.1s ease-in-out;
+}
+/* Show labels on hover */
+.sidebar:hover .nav-link span {
+  visibility: visible;
+  opacity: 1;
+}
+/* Theme switch button base */
+.sidebar .btn-theme-changer {
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.25em;
+}
+.btn-theme-changer:hover {
+  color: #d1ffd6;
+}
+.sidebar:hover .btn-theme-changer {
+  margin-left: -0.4em;
+}
+.btn-theme-changer i {
+  font-size: 1em;
+}
+/* Hide theme switch icons by default */
+.sidebar .fa-switch,
+.sidebar #span-theme-switch {
+  display: none;
+  opacity: 1;
+}
+/* Show theme switch icons on hover */
+.sidebar:hover .fa-switch,
+.sidebar:hover #span-theme-switch {
+  display: inline-block;
+  opacity: 1;
+}
+/* Sidebar configuration spans */
+.span-config {
+  display: block;
+}
+.sidebar .span-config {
+  margin-left: 0.2em;
+}
+.sidebar:hover .span-config {
+  margin-left: 1.2em;
+}
+
+/* Content area next to sidebar */
+.content {
+  flex: 1;
+  margin-right: 2rem;
+  padding: 1rem 1rem;
+  margin-left: 60px;
+}
+.sidebar:hover ~ .content {
+  margin-left: 14rem;
+}
+.col {
+  margin-top: 1.25em !important;
+}
+
+.col-comp-graph {
+  margin-top: 0.25em !important;
+}
+
+.p-1 {
+  margin: 1.2rem 0 0;
+}
+
+/* KPI Cards Styling */
+.card {
+  text-align: center;
+}
+.card .card-kpi-title {
+  text-align: left;
+  font-weight: lighter;
+}
+.card .p-0 .card-kpi-title {  
+  padding-left: 20px;
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin-top: 10px;
+}
+.card .card-kpi-value {
+  font-size: 2.3rem;
+}
+.card .card-kpi-target {
+  font-size: 1.5rem;
+  font-weight: lighter;
+}
+
+/* Graphs Styling */
+
+.svg-container {
+  height: 400px !important;; 
+}
+
+#wordcloud-container
+{
+  min-height: 400px !important;
+}
+
+/* Header Controls Styling */
+.header-controls {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.header-controls .col-auto {
+  padding: 0 0 0 12px;
+  margin: unset;
+}
+
+.header-controls .row {
+  --bs-gutter-x: unset;
+}
+
+.dbc .Select-control {
+  border: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+}
+
+.dbc .Select-placeholder {
+  color: var(--bs-body-color) !important;
+}
+
+.dbc .is-focused:not(.is-open) > .Select-control {
+  border: var(--bs-border-width) solid var(--bs-border-color-translucent) !important;
+  box-shadow: unset !important;
+}
+
+.Select--multi .Select-value {
+  margin-top: 4px;
+}
+
+/* Hide Mapbox Attribution Controls */
+.maplibregl-ctrl-attrib.maplibregl-compact-show,
+.maplibregl-ctrl-attrib.maplibregl-compact {
+  visibility: hidden !important;
+}
+
+/* Hide sidebar in small screens, show only in md and up */
+@media (max-width: 767.98px) {
+  .sidebar {
+    display: none !important;
+  }
+  .content {
+    flex: 1;
+    margin-right: 2rem;    
+    margin-left: 5px;
+  }
+
+  #btn-toggle-menu  {
+    margin-left: 0.5rem !important;
+  }
+
+  .title_page {
+    margin-bottom: 1.1rem;
+  }
+
+  #apply-button {
+    margin-top: 0.5rem;
+  }
+  
+}
+
+/* Sidebar styles for md+ screens */
+@media (min-width: 768px) {
+  .sidebar {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 5rem;
+    padding: 2rem 1rem;
+    z-index: 50;
+    transition: width 0.1s ease-in-out;
+  }
+
+  .sidebar:hover {
+    width: 16rem;
+  }
+
+  .content {
+    margin-left: 60px;
+  }
+
+  .sidebar:hover ~ .content {
+    margin-left: 14rem;
+  }
+}
