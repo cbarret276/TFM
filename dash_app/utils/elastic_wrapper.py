@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
-import utils.commons as utils
+from utils.commons import geolocate_ip_list
+from utils.commons import load_ttp_dict, load_country_dict
 import pandas as pd
 
 class ElasticContext:
@@ -15,10 +16,10 @@ class ElasticContext:
         self.GOLD_HRLY_INDEX = f"gold_mw_agr_hourly_*"
 
         # Load TTP dicts
-        self.attack_mapping = utils.load_ttp_dict()
+        self.attack_mapping = load_ttp_dict()
 
         # Load country dicts
-        self.country_mapping = utils.load_country_dict()
+        self.country_mapping = load_country_dict()
 
 
     def close(self):
@@ -88,89 +89,6 @@ class ElasticContext:
 
         return data
 
-    # # Get aggregated data by time bins
-    # def fetch_aggreg_by_bins(
-    #     self,
-    #     session_id,
-    #     start_datetime=None,
-    #     end_datetime=None,
-    #     interval="1h",
-    #     size="10"
-    # ):
-        
-    #     query = {
-    #         "query": {
-    #             "bool": {
-    #                 "filter": [
-    #                     {
-    #                         "term": {
-    #                             "type": "family"
-    #                         }
-    #                     },
-    #                     {
-    #                         "range": {
-    #                             "date": {
-    #                                 "gte": start_datetime,
-    #                                 "lte": end_datetime,
-    #                                 "format": "strict_date_optional_time"
-    #                             }
-    #                         }
-    #                     }
-    #                 ]
-    #             }
-    #         },
-    #         "aggs": {
-    #             "by_time": {
-    #                 "date_histogram": {
-    #                     "field": "date",
-    #                     "fixed_interval": interval
-    #                 },
-    #                 "aggs": {
-    #                     "by_family": {
-    #                         "terms": {
-    #                             "field": "family",
-    #                             "missing": "Unknown",
-    #                             "size": size
-    #                         },
-    #                         "aggs": {
-    #                             "count": {
-    #                                 "sum": {
-    #                                     "field": "count" 
-    #                                 }
-    #                             },
-    #                             "avg_score": {
-    #                                 "avg": {
-    #                                     "field": "avg_score"
-    #                                 }
-    #                             }
-    #                         }
-    #                     }
-    #                 }
-    #             }
-    #         },
-    #         "size": 0  # No devolvemos documentos, solo agregaciones
-    #     }
-
-    #     # Ejecutar la consulta
-    #     results = self.es.search(index=self.GOLD_HRLY_INDEX, body=query)
-
-    #     # Procesar los resultados de las agregaciones
-    #     data = []
-    #     for bucket in results["aggregations"]["by_time"]["buckets"]:
-    #         timestamp = bucket["key_as_string"]
-    #         for family_bucket in bucket["by_family"]["buckets"]:
-    #             avg_score = family_bucket.get("avg_score", {}).get("value", None)  # Obtén el valor promedio del score
-    #             count = family_bucket.get("count", {}).get("value", 0)  # Obtén la suma del campo 'count'
-    #             data.append({
-    #                 "timestamp": timestamp,
-    #                 "family": family_bucket["key"],
-    #                 "count": count,
-    #                 "avg_score": avg_score  # Incluye el promedio del score
-    #             })
-
-    #     return data
-
-
     # Get aggregated ioc data
     def fetch_aggregated_iocs(
             self,
@@ -179,11 +97,6 @@ class ElasticContext:
             families=None, 
             limit=50
         ):
-
-        """
-        Aggregates IOCs (IPs, domains, TTPs) from the bronze index within a time range,
-        optionally filtered by malware family.
-        """
 
         query_filters = [
             {
@@ -254,6 +167,7 @@ class ElasticContext:
 
         return ip_counts, domain_counts, ttp_counts
 
+    # Method to fetch IPs by family using aggregations
     def fetch_ips_by_family_agg(self, start_dt, end_dt, families=None, size=200):
         """
         Devuelve IPs observadas agrupadas por familia usando agregaciones (más eficiente).
@@ -304,7 +218,7 @@ class ElasticContext:
         return pd.DataFrame(results)
 
 
-    # Método para realizar la consulta de TTP y su conteo
+    # Method to fetch TTP counts grouped by family or technique
     def fetch_ttp_count(
         self,
         start_datetime,
@@ -502,13 +416,7 @@ class ElasticContext:
             index_template='gold_mw_agr',
             grain="hourly",
             families=None):
-        """
-        Fetches from the Gold index for the specified date range.
-        :param start_datetime: Start datetime in ISO 8601 format.
-        :param end_datetime: End datetime in ISO 8601 format.
-        :param index_template: Gold index template with wildcard for date partitions.
-        :return: Dictionary with aggregated KPI values.
-        """
+      
         index_template = f"{index_template}_{grain}_*"
 
         filters = [
@@ -556,14 +464,12 @@ class ElasticContext:
             "size": 0  # Return only aggregations
         }
 
-        # Execute the query
         results = self.es.search(index=index_template, body=query)
 
         aggs = results.get("aggregations")
         if not aggs:
             return None
 
-        # Process results
         total_records = results["aggregations"]["total_count"]["value"]
         total_records_malware = results["aggregations"]["total_count_malware"]["sum_count"]["value"]
         avg_score = results["aggregations"]["avg_score"]["avg_value"]["value"]
@@ -579,84 +485,17 @@ class ElasticContext:
             "family_num": family_num
         }
 
-    # Method to fetch malware data grouped by country from Elasticsearch
-    def fetch_malware_data_by_country(self,                                      
-                                      start_datetime=None,
-                                      end_datetime=None):
-        """
-        Queries Elasticsearch to retrieve the count of malware detections grouped by country and family, 
-        filtered by a date range.
-        
-        :param session_id: Current session identifier
-        :param start_datetime: Start of the date range (ISO 8601 format)
-        :param end_datetime: End of the date range (ISO 8601 format)
-        :param index_name: The name of the Elasticsearch index to query
-        :return: List of dictionaries containing country, family, count, latitude, and longitude
-        """
-        query = {
-            "size": 0,  # Do not return individual documents
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"range": {"created": {"gte": start_datetime, 
-                                               "lte": end_datetime, 
-                                               "format": "strict_date_optional_time"}}},
-                        {"exists": {"field": "origin_country"}}
-                    ]
-                }
-            },
-            "aggs": {
-                "by_country": {
-                    "terms": {
-                        "field": "origin_country",  # Group results by country codes
-                        "size": 200,  # Maximum number of buckets
-                        "missing": "Unknown",  # Assign "Unknown" to documents without a country code
-                    },
-                    "aggs": {
-                        "by_family": {
-                            "terms": {
-                                "field": "family",  # Group by malware family
-                                "size": 100,  # Limit the number of families per country
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        # Execute the query
-        results = self.es.search(index=self.BRONZE_INDEX, body=query)
-
-        # Prepare data for the map
-        country_data = []
-        for bucket in results["aggregations"]["by_country"]["buckets"]:
-            country_code = bucket["key"]
-            for family_bucket in bucket["by_family"]["buckets"]:
-                family = family_bucket["key"]
-                count = family_bucket["doc_count"]
-
-                # Map country codes to latitude and longitude
-                country_coord = self.country_mapping.get(country_code)
-
-                country_data.append({
-                    "country": country_code,
-                    "family": family,
-                    "count": count,
-                    "latitude": country_coord["latitude"],
-                    "longitude": country_coord["longitude"],
-                })
-
-        return country_data
-    
-
-    def fetch_sample_count_by_country(
-        self, start_datetime=None, end_datetime=None, 
-        families=None
+    # Method to fetch malware aggregated by country
+    def fetch_malware_by_country(
+        self,
+        start_datetime=None,
+        end_datetime=None,
+        families=None,
+        aggregate_by_family=False,
+        with_coords=False,
+        size=200,
+        infer_miss_count=False
     ):
-        """
-        Returns a DataFrame with the count of samples grouped by country
-        """
-
         query_filters = [
             {
                 "range": {
@@ -668,10 +507,29 @@ class ElasticContext:
                 }
             }
         ]
-
-        # Optional filter by selected families
+        
         if families:
             query_filters.append({"terms": {"family": families}})
+
+        aggs = {
+            "by_country": {
+                "terms": {
+                    "field": "origin_country",
+                    "size": size,
+                    "missing": "Unknown"
+                }
+            }
+        }
+
+        if aggregate_by_family:
+            aggs["by_country"]["aggs"] = {
+                "by_family": {
+                    "terms": {
+                        "field": "family",
+                        "size": size
+                    }
+                }
+            }
 
         query = {
             "size": 0,
@@ -680,37 +538,179 @@ class ElasticContext:
                     "filter": query_filters
                 }
             },
-            "aggs": {
-                "by_country": {
-                    "terms": {
-                        "field": "origin_country",
-                        "size": 200
-                    }
-                }
-            }
+            "aggs": aggs
         }
 
         results = self.es.search(index=self.BRONZE_INDEX, body=query)
         buckets = results["aggregations"]["by_country"]["buckets"]
 
-        data = [{"country": b["key"], "sample_count": b["doc_count"]} for b in buckets]
+        data = []
+        for b in buckets:
+            country_code = b["key"]
+            entry = {"country": country_code}
+            if with_coords:
+                coords = self.country_mapping.get(country_code, {})
+                entry["latitude"] = coords.get("latitude")
+                entry["longitude"] = coords.get("longitude")
+            if aggregate_by_family:
+                for fb in b.get("by_family", {}).get("buckets", []):
+                    entry["family"] = fb["key"]
+                    entry["count"] = fb["doc_count"]
+            else:
+                entry["sample_count"]=b["doc_count"]
+            data.append(entry)
+        
+        # If infer_missing_countries is True, we can add missing countries
+        if infer_miss_count:
+            missing_query = {
+                "_source": ["ips", "family"],
+                "query": {
+                    "bool": {
+                        "filter": query_filters + [{"exists": {"field": "ips"}}],
+                        "must_not": [{"exists": {"field": "origin_country"}}]
+                    }
+                }
+            }
+
+            response = self.es.search(
+                index=self.BRONZE_INDEX,
+                body=missing_query,
+                size=size
+            )
+
+            sample_modif = []
+
+            for hit in response["hits"]["hits"]:
+                ips = hit["_source"].get("ips", [])
+            
+                df_geo = pd.DataFrame(geolocate_ip_list(ips))
+
+                if df_geo.empty:
+                    continue
+
+                inferred_country = df_geo["country_code"].value_counts().idxmax()
+
+                entry = {"country": inferred_country}
+                entry["count"] = 1
+                if aggregate_by_family:
+                    entry["family"] = hit["_source"].get("family", "Unknown")
+
+                sample_modif.append(entry)
+            
+            df_samples = pd.DataFrame(sample_modif)
+
+            if aggregate_by_family:
+                df_grouped = df_samples.groupby(["country", "family"], as_index=False)["count"].sum()
+            else:
+                df_grouped = df_samples.groupby("country", as_index=False)["count"].sum()
+                df_grouped.rename(columns={"count": "sample_count"}, inplace=True)
+            
+            if with_coords:
+                df_grouped["latitude"] = df_grouped["country"].map(
+                    lambda c: self.country_mapping.get(c, {}).get("latitude"))
+                df_grouped["longitude"] = df_grouped["country"].map(
+                    lambda c: self.country_mapping.get(c, {}).get("longitude"))
+            data.extend(df_grouped.to_dict(orient="records"))
+
+
         return pd.DataFrame(data)
-
-    def build_ip_enrichment_dataframe(
-        self, start_datetime, end_datetime, families=None, 
-        limit=1000, enrich=True
+    
+    # Method to fetch techniques by country
+    def fetch_techniques_by_country(
+        self,
+        start_datetime=None,
+        end_datetime=None,
+        families=None,
+        size=200,
+        infer_miss_count=False
     ):
-        """
-        Returns a DataFrame for Sankey diagram linking:
-        IP → confidence_level → threat_type → malware → country
-        Only includes IPs seen in the specified time range with enrichment data.
-        """
+        query_filters = [
+            {
+                "range": {
+                    "created": {
+                        "gte": start_datetime,
+                        "lte": end_datetime,
+                        "format": "strict_date_optional_time"
+                    }
+                }
+            }
+        ]
+        if families:
+            query_filters.append({"terms": {"family": families}})
 
-        ip_counts, _, _ = self.fetch_aggregated_iocs(start_datetime, end_datetime, families, limit=limit)
+        query = {
+            "_source": ["origin_country", "ttp"],
+            "query": {
+                "bool": {
+                    "filter": query_filters + [{"exists": {"field": "origin_country"}}]
+                }
+            }
+        }
+
+        response = self.es.search(index=self.BRONZE_INDEX, body=query, size=size)
+
+        records = []
+        for hit in response["hits"]["hits"]:
+            src = hit["_source"]
+            country = src.get("origin_country")
+            ttps = src.get("ttp", [])
+            for t in set(ttps):  # evitar duplicados internos
+                records.append({"country": country, "ttp": t})
+
+        print(f"-- Técnicas con país conocido: {len(records)}")
+
+        # Parte 2: muestras sin país, geolocalizar por IP
+        if infer_miss_count:
+            missing_query = {
+                "_source": ["ips", "ttp"],
+                "query": {
+                    "bool": {
+                        "filter": query_filters + [{"exists": {"field": "ips"}}],
+                        "must_not": [{"exists": {"field": "origin_country"}}]
+                    }
+                }
+            }
+
+            response = self.es.search(index=self.BRONZE_INDEX, body=missing_query, size=size)
+
+            for hit in response["hits"]["hits"]:
+                src = hit["_source"]
+                ips = src.get("ips", [])
+                if not ips:
+                    continue
+
+                df_geo = pd.DataFrame(geolocate_ip_list(ips))
+                if df_geo.empty:
+                    continue
+
+                inferred_country = df_geo["country_code"].value_counts().idxmax()
+                ttps = src.get("ttp", [])
+                for t in set(ttps):
+                    records.append({"country": inferred_country, "ttp": t})
+
+            print(f"-- Técnicas con país inferido: {len(records)}")
+
+        # Agrupar por país y contar TTPs únicas
+        df = pd.DataFrame(records)
+        if df.empty:
+            return pd.DataFrame(columns=["country", "ttp_count"])
+
+        df_unique = df.drop_duplicates()
+        df_grouped = df_unique.groupby("country").size().reset_index(name="ttp_count")
+
+        return df_grouped
+
+    # Method to build a DataFrame for IP enrichment (optional)
+    def build_ip_enrichment_dataframe(
+        self, start_datetime, end_datetime, 
+        families=None, 
+        size=1000, enrich=True
+    ):
+        ip_counts, _, _ = self.fetch_aggregated_iocs(start_datetime, end_datetime, families, limit=size)
         if not ip_counts:
             return pd.DataFrame()
 
-        df = pd.DataFrame(ip_counts).nlargest(limit, "count")
+        df = pd.DataFrame(ip_counts).nlargest(size, "count")
         if df.empty:
             return pd.DataFrame()
 
@@ -738,7 +738,7 @@ class ElasticContext:
             df_enriched = pd.DataFrame(enriched_data)
             df = pd.merge(df, df_enriched, on="ip", how="inner")
 
-        geo_data = utils.geolocate_ip_list(df["ip"].tolist())
+        geo_data = geolocate_ip_list(df["ip"].tolist())
         if not geo_data:
             return pd.DataFrame()
         

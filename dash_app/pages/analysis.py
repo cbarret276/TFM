@@ -39,12 +39,12 @@ layout = dbc.Container(
         # Title and global filters
         dbc.Row([
             dbc.Col(html.H4("Análisis de muestras", className="mt-md-3 title_page"), xs=12),
-            dbc.Col(get_filters(), xs=12),  # Este contenedor se puede cargar con filtros dinámicos
+            dbc.Col(get_filters(), xs=12),  
         ], className="align-items-end gx-2"),
 
         # Filtros de búsqueda
         dbc.Row([
-            dbc.Col(dbc.Input(id="analysis-search", placeholder="Buscar hash, IP, dominio...", debounce=True)),
+            dbc.Col(dbc.Input(id="analysis-search", placeholder="Buscar en id, tags, técnicas, progragación, IPs y dominios...", debounce=True)),
         ], className="mb-3"),
 
         dbc.Row([
@@ -55,6 +55,7 @@ layout = dbc.Container(
                 marks={i: str(i) for i in range(0, 11)},
                 tooltip={"placement": "bottom", "always_visible": True}
             ), md=4)
+            
         ]),
 
         # Tabla principal

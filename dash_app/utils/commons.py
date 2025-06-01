@@ -38,6 +38,26 @@ def iso2_to_iso3(code):
     except:
         return None
 
+# Normalize country code to ISO 3 format
+def normalize_country_code(country):
+    if not isinstance(country, str):
+        return None
+    if len(country) == 3:
+        return country.upper()
+    elif len(country) == 2:
+        return iso2_to_iso3(country.upper())
+    return None
+
+# Convert ISO 2 code to country name in Spanish
+def iso2_to_country_name(iso2_code):
+    try:
+        country = pycountry.countries.get(alpha_2=iso2_code.upper())
+        if not country:
+            return None
+        return country.name
+    except Exception:
+        return None
+
 # Load country lat-long dict
 def load_country_dict():
     country_mapping = {}

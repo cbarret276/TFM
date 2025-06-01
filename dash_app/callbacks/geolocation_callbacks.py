@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from dash_bootstrap_templates import template_from_url
 from layouts.sidebar import theme_changer_aio
-from utils.commons import local_to_utc, iso2_to_iso3
+from utils.commons import local_to_utc, normalize_country_code
 from utils.graphs import empty_figure
 from app_instance import esc
 
@@ -42,34 +42,32 @@ def register_geolocation_callbacks():
             pd.to_datetime(end_date).isoformat(), tz_data
         )    
 
-        # Datos simulados
-        df = pd.DataFrame({
-            "country_code": ["USA", "FRA", "CHN", "RUS", "BRA"],
-            "country": ["Estados Unidos", "Francia", "China", "Rusia", "Brasil"],
-            "samples": [120, 85, 300, 230, 150],
-            "ips": [50, 22, 180, 140, 75],
-            "ttps": ["T1059", "T1027", "T1059", "T1203", "T1082"]
-        })
-
         # Selector del tipo de visualización
         if view_type == "samples":            
             # Get sample count by country
-            df = esc.fetch_sample_count_by_country(start_dt, end_dt, selected_families)
+            df = esc.fetch_malware_by_country(
+                start_dt, end_dt, 
+                selected_families,
+                infer_miss_count=True
+            )
+            
             if df.empty:
                 return empty_figure()
+
             # Convert from ISO-2 to ISO-3
-            df["country_code"] = df["country"].apply(iso2_to_iso3)
+            df["country_code"] = df["country"].apply(normalize_country_code)
             df = df[df["country_code"].notna()]            
             z_field = "sample_count"
             values = df[z_field]
-            title = "Muestras de malware por país"
-            color_title = "Muestras"
+            color_title = "Nº de muestras"
             colorscale = [[0, "#ffe6cc"], [1, "#ff7f0e"]]
                     
 
         elif view_type == "ips":
             df = esc.build_ip_enrichment_dataframe(
-                start_dt, end_dt, selected_families, enrich=False
+                start_dt, end_dt, 
+                selected_families, 
+                enrich=False
             )
             if df.empty:
                 return empty_figure()
@@ -79,8 +77,7 @@ def register_geolocation_callbacks():
             df = country_agg
             z_field = "ip_count"
             values = country_agg[z_field]
-            title = "IPs maliciosas por país"
-            color_title = "IPs"
+            color_title = "Nº de IoCs (IPs)"
             colorscale = [
                 [0.0, "#fde0dc"],  # rojo muy claro
                 [0.25, "#f9bdbb"],
@@ -89,14 +86,23 @@ def register_geolocation_callbacks():
                 [1.0, "#b71c1c"]   # rojo intenso
             ]
 
-        else:
-            df["ttp_freq"] = df["ttps"].map({
-                "T1059": 5, "T1027": 3, "T1203": 4, "T1082": 2
-            }).fillna(1)
-            z_field = "ttp_freq"
-            color_title = "TTP"
-            title = "Frecuencia de TTP dominante"
+        elif view_type == "ttps":
+            df = esc.fetch_techniques_by_country(
+                start_datetime=start_dt,
+                end_datetime=end_dt,
+                families=selected_families,
+                infer_miss_count=True
+            )
+
+            if df.empty:
+                return empty_figure()
+
+            df["country_code"] = df["country"].apply(normalize_country_code)
+            df = df[df["country_code"].notna()]
+
+            z_field = "ttp_count"
             values = df[z_field]
+            color_title = "Nº de técnicas"
             colorscale=[[0, "#dceeff"], [1, "#1f77b4"]]
 
 

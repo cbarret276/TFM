@@ -19,9 +19,9 @@ card_geo_map = dbc.Card(
                             dcc.Dropdown(
                                 id="geo-view",
                                 options=[
-                                    {"label": "Muestras por país", "value": "samples"},
-                                    {"label": "Tácticas dominantes", "value": "ttps"},
-                                    {"label": "IPs maliciosas", "value": "ips"}
+                                    {"label": "Distribución de malware por países", "value": "samples"},
+                                    {"label": "Diversidad de técnicas de ataque", "value": "ttps"},
+                                    {"label": "Distribución de IoCs (IPs) por países", "value": "ips"}
                                 ],
                                 value="samples",
                                 placeholder="Selecciona un tipo de análisis",
