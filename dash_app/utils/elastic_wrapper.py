@@ -1,6 +1,4 @@
-from datetime import datetime
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import scan
 import utils.commons as utils
 import pandas as pd
 

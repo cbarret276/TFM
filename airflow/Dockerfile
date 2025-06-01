@@ -1,16 +1,8 @@
 # Use a lightweight Airflow image with Python 3.10
-FROM apache/airflow:slim-latest-python3.10
-
-# Set environment variables for Airflow configuration
-# Use SQLite for local testing (not suitable for production)
-ENV AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////tmp/airflow.db \  
-   # Runs tasks one at a time (simplest executor, good for dev)
-    AIRFLOW__CORE__EXECUTOR=SequentialExecutor \  
-    # Prevents loading demo DAGs
-    AIRFLOW__CORE__LOAD_EXAMPLES=False  
+FROM apache/airflow:slim-2.11.0-python3.10
 
 # Install required Python packages and initialize Airflow metadata database
-RUN pip install pymongo elasticsearch && airflow db init
+RUN pip install --no-cache-dir psycopg2-binary elasticsearch==7.17.12
 
 # Override the default entrypoint to allow chaining multiple shell commands
 ENTRYPOINT ["sh", "-c"]

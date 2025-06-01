@@ -31,6 +31,7 @@ def load_ttp_dict():
     return attack_mapping
 
 
+# Map country codes from ISO 2 to ISO 3
 def iso2_to_iso3(code):
     try:
         return pycountry.countries.get(alpha_2=code).alpha_3

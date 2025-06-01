@@ -88,8 +88,8 @@ card2_1 = dbc.Card(
                 children=dcc.Graph(
                     id="histogram-graph", 
                     className="w-100 h-100"
-                ),
-            ),
+                )
+            )
         ],
         className="p-0"
     ),

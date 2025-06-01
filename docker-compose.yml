@@ -3,14 +3,13 @@ services:
   # ======================================
   # Service: Elasticsearch
   # ======================================
-
   elasticsearch:
     build: ./elastic/.
     container_name: elastic-container
     ports:
       - 9200:9200 # REST API port for Elasticsearch
     volumes:
-      - ./elastic/data:/usr/share/elasticsearch/data  # Mount persistent volume for index storage
+      - ./elastic/data:/usr/share/elasticsearch/data  # Mount persistent volume for index storage 
 
   # ======================================
   # Service: Apache Airflow
@@ -19,10 +18,11 @@ services:
     build: ./airflow/. 
     container_name: airflow-container
     env_file:
-      - .env  # Fichero con las claves de las APIs a utilizar
+      - .env_airflow  # Environment variables for Airflow, such as API keys
     ports:
       - "8080:8080" # Web UI port for Airflow
     depends_on:
+      - postgres  # Wait for PostgreSQL to be ready
       - elasticsearch    # Wait for Elasticsearch to become available
     volumes:
       - ./airflow/dags:/opt/airflow/dags  # Mount custom DAGs from host into Airflow container
@@ -38,3 +38,16 @@ services:
     depends_on:
       - elasticsearch  # Wait until Elasticsearch is running
 
+  # ======================================
+  # Service: PostgreSQL
+  # ======================================
+  postgres:
+    build: ./postgres/.
+    container_name: postgres-container
+    env_file:
+      - .env_postgres  # Environment variables for PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data: 

@@ -57,7 +57,7 @@ INDEX_SETTINGS = {
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2025, 5, 26, 3, 0), # days_ago(6)
+    'start_date': datetime(2025, 5, 29, 13, 30), # days_ago(6)
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,
@@ -69,6 +69,7 @@ dag = DAG(
     'gen_bronze_mw_raw_index',
     default_args=default_args,
     description='DAG for continuous ingestion of malware data from Triage API without duplication or loss of events',
+    catchup=True,
     schedule_interval=timedelta(minutes=5)
 )
 
@@ -260,6 +261,7 @@ fetch_sample_ids_task = PythonOperator(
     task_id='fetch_sample_ids',
     python_callable=fetch_sample_ids,
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 
@@ -269,6 +271,7 @@ fetch_sample_details_task = PythonOperator(
     python_callable=fetch_sample_details,
     op_args=['{{ ti.xcom_pull(task_ids="fetch_sample_ids") }}'],
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 

@@ -88,6 +88,8 @@ def register_home_callbacks():
         theme_name = template_from_url(theme)
         template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
 
+        print(f"Updating histogram with start_date: {start_date}, end_date: {end_date}, selected_families: {selected_families}")
+
         # Convert datetime values to ISO format and localize to UTC
         start_dt = local_to_utc(
             pd.to_datetime(start_date).isoformat(), tz_data
@@ -152,13 +154,13 @@ def register_home_callbacks():
             y="count",
             color="family",
             color_discrete_map=color_map,
-            barmode="stack",
-            labels={
-                "timestamp": "Intervalo de tiempo", 
-                "count": "Conteo de muestras", 
-                "family": "Familia de Malware"
-            },            
+            barmode="stack",                  
             title="Evolución temporal del malware",
+            labels={
+                "family": "Familia",
+                "timestamp": "Período",
+                "count": "Nº de muestras",
+            },
             nbins=len(date_range),
             template=template_name
         )
@@ -174,6 +176,7 @@ def register_home_callbacks():
             margin=dict(l=40, r=20, t=60, b=60),
             showlegend=(screen_width >= 576)
         )
+
         return fig
 
     # Update graph-bar with families
@@ -282,18 +285,22 @@ def register_home_callbacks():
             df = df[df["family"].isin(selected_families)]
 
         
-        # 🌍 Geolocalizar IPs
+        # Geolocate IPs
         geo_data = geolocate_ip_list(df["ip"].tolist())
         df_geo = pd.DataFrame(geo_data)
         df = df.merge(df_geo, on="ip", how="left")
         df = df.dropna(subset=["latitude", "longitude"])
         df["size_scaled"] = np.sqrt(df["count"]) * 5
 
+        # Add jitter to latitude and longitude for better visibility
+        df["latitude_jittered"] = df["latitude"] + np.random.uniform(-0.3, 0.3, size=len(df))
+        df["longitude_jittered"] = df["longitude"] + np.random.uniform(-0.3, 0.3, size=len(df))
+
         # Create a scatter map using Plotly Express
         fig = px.scatter_map(
             data_frame=df,
-            lat="latitude",  # Latitude for countries
-            lon="longitude",  # Longitude for countries
+            lat="latitude_jittered",  # Latitude for countries
+            lon="longitude_jittered",  # Longitude for countries
             size="size_scaled",  # Size of circles corresponds to malware count
             color="family",  # Color differentiation based on malware families
             color_discrete_sequence=adjust_palette(df["family"].nunique()),
@@ -302,6 +309,7 @@ def register_home_callbacks():
             zoom=0.5,  # Initial zoom level
             center={"lat":20.92, "lon":17.28},  # Center the map
             template=template_name,  # Apply the selected template
+            custom_data=["ip", "count", "country", "family"]
         )
 
         fig.update_layout(
@@ -323,6 +331,16 @@ def register_home_callbacks():
                borderwidth=1
             ),
             margin=dict(l=20, r=20, t=60, b=20),
+        )
+
+        fig.update_traces(
+            hovertemplate=(
+                "<b>Familia:</b> %{customdata[3]}<br>" +
+                "<b>IP:</b> %{customdata[0]}<br>" +
+                "<b>País:</b> %{customdata[2]}<br>" +
+                "<b>Nº de muestras:</b> %{customdata[1]}<br>" +
+                "<extra></extra>"
+            )
         )
 
         return fig

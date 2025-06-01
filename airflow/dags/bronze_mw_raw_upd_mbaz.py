@@ -22,7 +22,7 @@ if not API_KEY:
 default_args = {
     'owner': 'airflow',  # DAG owner name
     'depends_on_past': False,  # Doesn't depend on past DAG runs
-    'start_date': datetime(2025, 5, 24, 17), # days_ago(6) # Start
+    'start_date': datetime(2025, 5, 28, 13, 30), # days_ago(6) # Start
     'email_on_failure': False,  # No email notifications on failure
     'email_on_retry': False,  # No email notifications on retry
     'retries': 3,  # Number of retries for each task
@@ -35,7 +35,8 @@ dag = DAG(
     'gen_bronze_mw_raw_upd_mbaz',
     default_args=default_args,
     description='DAG to update malware data from Malware Bazaar based on Triage processed data',
-    schedule_interval=timedelta(minutes=5),  # Se ejecuta cada 10 minutos
+    catchup=True,
+    schedule_interval=timedelta(minutes=5)
 )
 
 
@@ -202,6 +203,7 @@ fetch_hashes_task = PythonOperator(
     task_id='fetch_hashes_from_elastic',
     python_callable=fetch_hashes_from_elastic,
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 
@@ -211,6 +213,7 @@ query_bazaar_task = PythonOperator(
     python_callable=query_malware_bazaar,
     op_args=['{{ ti.xcom_pull(task_ids="fetch_hashes_from_elastic") }}'],  # Pass hashes
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 
@@ -220,6 +223,7 @@ update_elastic_task = PythonOperator(
     python_callable=update_elastic_with_bazaar_data,
     op_args=['{{ ti.xcom_pull(task_ids="query_malware_bazaar") }}'],  # Pass data
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 

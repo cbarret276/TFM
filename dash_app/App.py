@@ -1,9 +1,7 @@
 # Import packages
 from app_instance import app
-from dash_ag_grid import AgGrid
 from dash import dcc, html
 from dash_mantine_components import MantineProvider 
-import dash_mantine_components as dmc
 import uuid
 from layouts.sidebar import sidebar
 from layouts.top_navbar import top_navbar, mobile_sidebar
@@ -51,4 +49,5 @@ register_analysis_callbacks()
 # Run the app
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5173)
+    
 

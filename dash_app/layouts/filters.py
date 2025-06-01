@@ -17,6 +17,29 @@ def get_filters(initial_start=None, initial_end=None):
             # Primera fila: fechas
             dbc.Row(
                 [
+                     dbc.Col(
+                        dbc.Row([
+                            dbc.Col(html.Label("Rango:", className="text-nowrap me-1"), width="auto"),
+                            dbc.Col(
+                                dcc.Dropdown(
+                                    id="time-range-selector",
+                                    options=[
+                                        {"label": "Día actual", "value": "today"},
+                                        {"label": "Últimas 24 horas", "value": "last24h"},
+                                        {"label": "Última semana", "value": "last7d"},
+                                        {"label": "Último mes", "value": "last30d"},
+                                        {"label": "Último año", "value": "last365d"},
+                                    ],
+                                    placeholder="Personalizado",
+                                    clearable=True,
+                                    className="w-60"
+                                ),
+                                className="m-0"
+                            ),
+                        ], className="align-items-center"),
+                        xs=12, md=4, lg=3, xl=3, xxl=2, className="mb-2"
+                    ),
+
                     dbc.Col(
                         dbc.Row([
                             dbc.Col(html.Label("Desde:", htmlFor="datetime-picker-start", className="text-nowrap me-1"), width="auto"),

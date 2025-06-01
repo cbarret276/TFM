@@ -25,7 +25,7 @@ if not THREATFOX_API_KEY:
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2025, 5, 25), #days_ago(6),
+    'start_date': datetime(2025, 5, 29, 14), #days_ago(6),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,
@@ -226,6 +226,7 @@ extract_ips_task = PythonOperator(
     task_id='extract_ips_from_bronze',
     python_callable=extract_ips_from_bronze,
     provide_context=True,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 
@@ -234,6 +235,7 @@ enrich_ips_task = PythonOperator(
     python_callable=enrich_ips,
     provide_context=True,
     op_args=['{{ ti.xcom_pull(task_ids="extract_ips_from_bronze") }}'],
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 

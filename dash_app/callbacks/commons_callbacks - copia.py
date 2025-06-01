@@ -1,7 +1,7 @@
-from dash import Input, Output, callback, State, clientside_callback, no_update, exceptions
+from dash import Input, Output, callback, State, clientside_callback
 from dash import callback_context as ctx
 from app_instance import esc
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import pandas as pd
 
 import importlib
@@ -91,26 +91,45 @@ def register_render_page_content():
 
 
 def register_filters_callbacks():
+#     # Callback to update the date range picker
+#     @callback(
+#         Output("datetime-picker-start", "value"),
+#         Output("datetime-picker-end", "value"),
+#         Input("datetime-picker-start", "value"),
+#         Input("datetime-picker-end", "value"),
+#         prevent_initial_call=True
+#     )
+#     def sync_dates(start_value, end_value):
+#         start = pd.to_datetime(start_value)
+#         end = pd.to_datetime(end_value)
+#         triggered = ctx.triggered_id 
 
-    # Callback to update the global filters based on user input
+#         if triggered == "datetime-picker-start" and start >= end:
+#                 new_end = (start + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+#                 return start.isoformat(), new_end.isoformat()
+
+#         elif triggered == "datetime-picker-end" and end <= start: 
+#                 new_start = (end - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+#                 return new_start.isoformat(), end.isoformat()
+
+#         return start_value, end_value
+
+    # Callback to store the global filters in session storage
     @callback(
         Output("global-filters", "data"),
         [
             Input("datetime-picker-start", "value"),
             Input("datetime-picker-end", "value"),
-            Input("family-dropdown", "value"),
-            Input("time-range-selector", "value")
+            Input("family-dropdown", "value")
         ],
         prevent_initial_call=True
     )
-    def update_global_filters(start, end, families, range_selected):
+    def update_global_filters(start, end, families):
         return {
             "start": start,
             "end": end,
-            "families": families,
-            "range": range_selected
+            "families": families
         }
-
 
     # Callback to update the family filter dropdown options
     @callback(
@@ -134,75 +153,61 @@ def register_filters_callbacks():
 
         return options
     
- 
-    # Callback to restore filters from session
+    # Callback to update filters from session
     @callback(
         Output("datetime-picker-start", "value"),
         Output("datetime-picker-end", "value"),
         Output("family-dropdown", "value"),
-        Output("time-range-selector", "value"),
-
         Input("url", "pathname"),
-        Input("time-range-selector", "value"),
-        Input("datetime-picker-start", "value"),
-        Input("datetime-picker-end", "value"),
-
         State("global-filters", "data"),
-        State("datetime-picker-start", "value"),
-        State("datetime-picker-end", "value"),
         prevent_initial_call=True
     )
-    def unified_filter_logic(
-        path, range_selected, manual_start, manual_end, 
-        stored_data, start_state, end_state
-    ):
+    def restore_filters(path, data):
+        if data:
+            return data.get("start"), data.get("end"), data.get("families") 
+        else: 
+            initial_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+            initial_end = (datetime.now() + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0).isoformat() 
+            return initial_start, initial_end, None
+    
+    #  Callback to update the date range picker based on the selected time range
+    @callback(
+        Output("datetime-picker-start", "value"),
+        Output("datetime-picker-end", "value"),
+        Input("time-range-selector", "value"),
+        prevent_initial_call=True
+    )
+    def update_dates_from_selector(range_selected):
+        now = datetime.now()
+        if range_selected == "today":
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            end = (start + timedelta(days=1))
+        elif range_selected == "last24h":
+            end = now
+            start = end - timedelta(hours=24)
+        elif range_selected == "last7d":
+            end = now
+            start = end - timedelta(days=7)
+        elif range_selected == "last30d":
+            end = now
+            start = end - timedelta(days=30)
+        elif range_selected == "last365d":
+            end = now
+            start = end - timedelta(days=365)
+        else:
+            return dash.no_update, dash.no_update
+
+        return start.isoformat(), end.isoformat()
+
+    # Limpia el selector si el usuario cambia manualmente las fechas
+    @callback(
+        Output("time-range-selector", "value"),
+        Input("datetime-picker-start", "value"),
+        Input("datetime-picker-end", "value"),
+        prevent_initial_call=True
+    )
+    def clear_selector_on_manual_change(start, end):
         triggered = ctx.triggered_id
-        now = datetime.now(timezone.utc).replace(microsecond=0)
-
-        # Caso 1: Restaurar desde global-filters
-        if triggered == "url":
-            if stored_data:
-                return (
-                    stored_data.get("start"),
-                    stored_data.get("end"),
-                    stored_data.get("families"),
-                    stored_data.get("range")
-                )
-            else: 
-                start = now.replace(hour=0, minute=0, second=0)
-                end = start + timedelta(days=1)
-                start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-                end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-                return (
-                    start, end, None, None
-                )
-
-        # Caso 2: Aplicar rango predefinido
-        if triggered == "time-range-selector":
-            if range_selected == "today":
-                start = now.replace(hour=0, minute=0, second=0)
-                end = start + timedelta(days=1)
-            elif range_selected == "last24h":
-                end = now
-                start = end - timedelta(hours=24)
-            elif range_selected == "last7d":
-                end = now
-                start = end - timedelta(days=7)
-            elif range_selected == "last30d":
-                end = now
-                start = end - timedelta(days=30)
-            elif range_selected == "last365d":
-                end = now
-                start = end - timedelta(days=365)
-            else:
-                return no_update, no_update, no_update, no_update
-
-            # Asegura zona UTC y sin microsegundos
-            start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-            end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-
-            return start, end, no_update, no_update
-
-        # Caso 3: El usuario modificó manualmente las fechas
         if triggered in ["datetime-picker-start", "datetime-picker-end"]:
-            return manual_start, manual_end, no_update, ""
+            return None
+        return dash.no_update
