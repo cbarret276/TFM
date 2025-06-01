@@ -3,7 +3,7 @@ import utils.commons as utils
 import pandas as pd
 
 class ElasticContext:
-    def __init__(self, host="http://localhost:9200"):
+    def __init__(self, host="http://elasticsearch:9200"):
         self.es = Elasticsearch(
             hosts=[host],
             max_retries=5,

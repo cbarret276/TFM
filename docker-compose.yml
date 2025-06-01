@@ -49,5 +49,23 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # ======================================
+  # Service: Gunicorn (for serving Dash app)
+  # ======================================
+  gunicorn:
+    build:
+      context: .
+      dockerfile: gunicorn/Dockerfile
+    container_name: gunicorn-container
+    env_file:
+      - .env_gunicorn
+    volumes:
+      - ./dash_app:/app
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch  # Wait until Elasticsearch is running
+
 volumes:
   postgres_data: 

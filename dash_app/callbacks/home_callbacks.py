@@ -88,8 +88,6 @@ def register_home_callbacks():
         theme_name = template_from_url(theme)
         template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
 
-        print(f"Updating histogram with start_date: {start_date}, end_date: {end_date}, selected_families: {selected_families}")
-
         # Convert datetime values to ISO format and localize to UTC
         start_dt = local_to_utc(
             pd.to_datetime(start_date).isoformat(), tz_data
