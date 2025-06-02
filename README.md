@@ -1,6 +1,6 @@
 # MalwareBI - Cuadro de Mandos para Análisis de Malware
 
-**MalwareBI** es un sistema modular y contenerizado desarrollado como parte de un Trabajo de Fin de Máster en Ciencia de Datos (UNED), orientado al análisis dinámico de amenazas de malware. Captura, enriquece, almacena y visualiza información de ciberinteligencia en tiempo casi real a partir de fuentes abiertas.
+**MalwareBI** es una solución modular y contenerizada desarrollada como parte de un Trabajo de Fin de Máster en Ciencia de Datos (UNED). Su objetivo es automatizar la recolección, procesamiento y visualización de indicadores de ciberamenazas a partir de fuentes abiertas, facilitando el análisis dinámico de malware en tiempo casi real.
 
 
 ---
@@ -21,9 +21,11 @@
 ```plaintext
 +---------------+     +----------------+     +-------------------+
 |  Triage API   | --> |                |     |                   |
-|  MalwareBazaar| --> | Apache Airflow | --> |   Elasticsearch   |
-|  ThreadFox    |     |                |     |                   |
-+---------------+     |                |     | (Bronz/Silv/Gold) |
+| MalwareBazaar | --> | Apache Airflow | --> |   Elasticsearch   |
+|   ThreadFox   |     |                |     |                   |
+| MITRE ATT&CK  |     |                |     | (Bronz/Silv/Gold) |
+|   Geolite2    |     |     (DAGs)     |     |                   |
++---------------+     |                |     |                   |
                       +----------------+     +-------------------+
                                                       |
                                                       v
@@ -38,7 +40,7 @@
 
 | Componente        | Tecnología                         |
 |-------------------|------------------------------------|
-| ETL orchestration | Apache Airflow                     |
+| Orquestación ETL  | Apache Airflow                     |
 | Almacenamiento    | Elasticsearch (niveles B/S/G)      |
 | Visualización     | Dash Plotly + Bootstrap Components |
 | Contenerización   | Docker + Docker Compose            |
@@ -52,6 +54,8 @@
 - [x] **Hatching Triage**: Sandbox avanzado de malware.
 - [x] **Malware Bazaar**: Repositorio público de muestras.
 - [x] **ThreatFox**: Feed de IOCs enriquecidos (IPs, amenazas).
+- [x] **MITRE ATT&CK**: Matriz de tácticas, técnicas y procedimientos.
+- [x] **Gelolite2 MaxMind**: fuente para geolocalización de IPs.
 
 ## 📊 Funcionalidades del dashboard
 
@@ -68,10 +72,10 @@
 
 ---
 
-## 🗂️ Estructura del repositorio
+## 🗂️ Estructura del Repositorio
 
 ```plaintext
-TFM-main/
+TFM/
 ├── airflow/             # DAGs de Airflow para ETL
 ├── dash_app/            # Aplicación Dash multipágina
 │   ├── assets/          # CSS personalizado
@@ -82,9 +86,11 @@ TFM-main/
 │   ├── App.py           # Punto de entrada principal de la app
 │   ├── app_instance.py  # Configuración compartida de la app Dash
 │   └── requirements.txt # Dependencias del dashboard
-├── doc/                 # Documentación del proyecto
+├── docs/                 # Documentación del proyecto
 ├── elastic/             # Configuración de índices de Elasticsearch
+├── gunicorm/            # Seervidor de despliegue de la aplicación
 ├── kibana/              # Dashboards o configuraciones de ejemplo
+├── postgres/            # Base de datos del planificador de Airflow
 ├── docker-compose.yml   # Orquestación de servicios
 ├── LICENSE              # Licencia del proyecto
 └── README.md            # Este documento
@@ -92,9 +98,9 @@ TFM-main/
 
 ---
 
-## ⚡ DAGs de Airflow implementados
+## ⚡ DAGs de Airflow Implementados
 
-Están ubicados en la carpeta airflow/dags
+Ubicados en la carpeta `airflow/dags`:
 
 - `bronze_mw_raw_idx_triage.py`
 - `bronze_mw_raw_upd_mbaz.py`
@@ -102,15 +108,9 @@ Están ubicados en la carpeta airflow/dags
 - `gold_malware_agreg_hourly.py`
 - `gold_malware_agreg_day.py`
 
-Es necesario crear en la carpeta raíz un fichero `.env`con las claves de las API:
-
-TRIAGE_API_KEY=your_key_here
-THREATFOX_API_KEY=your_key_here
-
-
 ---
 
-### Requisitos
+### 🐳 Requisitos y Ejecución
 
 - Docker v20+
 - Docker Compose v2+
@@ -133,18 +133,17 @@ Servicios disponibles:
 
 
 
-## 💻 Ejecución local del dashboard (modo desarrollo)
+## 💻 Ejecución Local del Dashboard (Modo Desarrollo)
 
 ```bash
 cd dash_app
 python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+pip install -r requirements.slim.txt
 python App.py
 ```
 
 ---
-
 
 
 ## 📄 Licencia

@@ -10,16 +10,6 @@ from itertools import cycle
 
 # Generate colors palett with interpolation
 def adjust_palette(num_colors=21, palette_name="tab20"):
-    """
-    Generates a palette of colors with `num_colors` using interpolation if necessary.
-    
-    Parameters:
-        num_colors (int): Number of colors to generate.
-        palette_name (str): Name of the matplotlib colormap.
-        
-    Returns:
-        list: A list of hexadecimal color codes.
-    """
     original_palette = cm.get_cmap(palette_name)
     original_size = original_palette.N
 
@@ -47,9 +37,6 @@ def adjust_palette(num_colors=21, palette_name="tab20"):
 
 # This function creates a reusable Plotly figure with a centered message for empty data scenarios.
 def empty_figure(message="Sin datos"):
-    """
-    Returns a reusable Plotly figure with a centered message for empty data scenarios.
-    """
     fig = go.Figure()
     fig.add_annotation(
         text=message,
@@ -70,9 +57,6 @@ def empty_figure(message="Sin datos"):
 
 # This function calculates the aggregation interval and normalizes the start and end datetimes.
 def calculate_interval_and_range(start, end):
-    """
-    Determines the aggregation interval (1h, 1d...) and normalizes start/end datetimes.
-    """
     time_delta = (end - start).total_seconds()
 
     if time_delta <= 86400:
@@ -86,20 +70,14 @@ def calculate_interval_and_range(start, end):
 
     return interval, start, end
 
-
+# This function assigns colors to categories based on their frequency in a DataFrame.
 def assign_color_sequence(df, palette):
-    """
-    Assigns colors to categories based on frequency (most frequent first).
-    """
     family_order = df.groupby("family")["count"].sum().sort_values(ascending=False).index
     color_map = {fam: palette[i % len(palette)] for i, fam in enumerate(family_order)}
     return color_map
 
-
+# This function creates a color function for word clouds that assigns colors based on word frequency.
 def make_ordered_color_func(frequencies, cmap_name="tab20"):
-    """
-    Creates a color function that assigns colors in order of frequency using a matplotlib colormap.
-    """
     # Get ordered list of colors from colormap
     colors = [to_hex(c) for c in plt.get_cmap(cmap_name).colors]
 
@@ -116,19 +94,8 @@ def make_ordered_color_func(frequencies, cmap_name="tab20"):
 
     return color_func
 
-
+# This function generates a word cloud image from a frequency dictionary.
 def generate_wordcloud(frequencies, theme = "light"):
-    """
-    Generates a WordCloud image and returns it as a base64-encoded PNG string.
-
-    Parameters:
-    - frequencies (dict): a dictionary of terms and their corresponding frequencies.
-    - theme (str): visual theme of the cloud ("light" or "dark").
-
-    Returns:
-    - str: base64-encoded string representing the generated PNG image.
-    """
-
     # Set background color based on theme
     bg_color = "white" if theme == "light" else "#212529"
 

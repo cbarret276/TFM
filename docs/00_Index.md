@@ -10,8 +10,6 @@ Este directorio contiene la documentación técnica y funcional del sistema Malw
 - [03_Manual_Usuario.md](03_Manual_Usuario.md): Guía de uso del cuadro de mandos para analistas y responsables de ciberseguridad.
 - [04_Documentacion_APIs.md](04_Documentacion_APIs.md): Documentación técnica de las APIs integradas (Triage, MalwareBazaar, ThreatFox).
 - [05_Backend_Airflow.md](05_Backend_Airflow.md): Estructura del backend de procesamiento y DAGs de Apache Airflow.
-- [06_Visualizaciones_Dashboard.md](06_Visualizaciones_Dashboard.md): Visualizaciones implementadas y principios de diseño utilizados.
-- [07_Enriquecimiento_IPs_ThreatFox.md](07_Enriquecimiento_IPs_ThreatFox.md): Proceso de enriquecimiento de IPs maliciosas con datos de ThreatFox.
 - [99_Referencias.md](99_Referencias.md): Recursos y enlaces técnicos utilizados como base del desarrollo.
 
 ---
