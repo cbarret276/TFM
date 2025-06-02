@@ -158,6 +158,11 @@
   min-height: 400px !important;
 }
 
+.range-slider-div {
+  margin-top: 0rem !important;
+  padding-left: 0px !important;
+}
+
 /* Header Controls Styling */
 .header-controls {
   display: flex;

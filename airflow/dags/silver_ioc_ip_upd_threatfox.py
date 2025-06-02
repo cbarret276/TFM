@@ -60,7 +60,7 @@ wait_for_bronze_dag = ExternalTaskSensor(
     failed_states=["failed", "skipped"],
     execution_date_fn=lambda dt: dt + timedelta(minutes=10),
     mode="reschedule",
-    timeout=60 * 60,
+    timeout=31 * 365 * 24 * 60 * 60,
     poke_interval=60,
     dag=dag,
 )

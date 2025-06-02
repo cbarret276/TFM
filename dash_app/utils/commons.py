@@ -76,10 +76,6 @@ def load_country_dict():
 
 # Load IPS and country  dict
 def geolocate_ip_list(ip_list):
-    """
-    Geolocates a list of IPs using a local MaxMind .mmdb file.
-    Returns a list of dicts with IP, city, country, lat/lon.
-    """
     file_path = os.path.join(os.path.dirname(__file__), 
                                  "assets",
                                  "GeoLite2-City.mmdb")
@@ -105,16 +101,6 @@ def geolocate_ip_list(ip_list):
     
 # Format a number with abbreviations
 def format_number(fstr, value):
-    """
-    Format a number with abbreviations for thousands (K), millions (M), and billions (B).
-    
-    Args:
-        value (float): The number to format.
-        
-    Returns:
-        str: The formatted string with abbreviation.
-    """
-
     locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
     # Formatea el número de forma abreviada
@@ -164,17 +150,6 @@ def shorten(text, max_len=30):
 
 # Convert UTC timestamp to local timezone
 def utc_to_local(df, column, tz_name):
-    """
-    Converts a timestamp column from UTC to a local timezone.
-    
-    Parameters:
-        df (DataFrame): The input DataFrame.
-        column (str): The name of the timestamp column.
-        tz_name (str): The timezone string (e.g. 'Europe/Madrid').
-    
-    Returns:
-        DataFrame: DataFrame with the timestamp column converted.
-    """
     tz = pytz.timezone(tz_name or "UTC")
     df[column] = pd.to_datetime(df[column]).dt.tz_convert(tz)
     return df
@@ -182,19 +157,12 @@ def utc_to_local(df, column, tz_name):
 
 # Convert local datetime to UTC
 def local_to_utc(dt, tz_name):
-    """
-    Convierte un datetime naive (en zona horaria local del usuario) a UTC.
-
-    """
     tz = pytz.timezone(tz_name or "UTC")
     return tz.localize(pd.to_datetime(dt)).astimezone(pytz.utc)
 
 
 # Nomalize a pandas Series
 def normalize_series(series, min_val=10, max_val=40):
-    """
-    Normalizes a pandas Series into a specified range [min_val, max_val].
-    """
     min_count = series.min()
     max_count = series.max()
     if max_count == min_count:
