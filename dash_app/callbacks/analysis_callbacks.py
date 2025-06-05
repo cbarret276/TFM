@@ -10,7 +10,7 @@ import pandas as pd
 # This module contains the callbacks for the analysis page of the dashboard.
 def register_analysis_callbacks():
 
-    # Callback para actualizar la tabla de muestras
+    # Callback for update aggrid
     @callback(
         Output("analysis-table", "columnDefs"),
         Output("analysis-table", "rowData"),
@@ -59,14 +59,14 @@ def register_analysis_callbacks():
             "size": 10000,
         }
 
-        # Consulta a Elasticsearch
+        # Query to Elasticsearch
         try:
             response = esc.es.search(index="bronze_mw_raw", body=query_body)
             hits = response["hits"]["hits"]
         except Exception as e:
             return [], []
 
-        # Formatear resultados
+        # Format results
         rows = [hit["_source"] for hit in hits]
 
         # Convert timestamps to local time if necessary
@@ -120,7 +120,6 @@ def register_analysis_callbacks():
             "size": 0
         }
 
-        # Consulta para file_type
         filetype_query = base_query.copy()
         filetype_query["aggs"] = {
             "filetypes": {
@@ -131,7 +130,6 @@ def register_analysis_callbacks():
             }
         }
 
-        # Consulta para origin_country
         country_query = base_query.copy()
         country_query["aggs"] = {
             "countries": {

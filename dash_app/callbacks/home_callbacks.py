@@ -2,13 +2,12 @@ from dash import Input, Output, State, callback, Patch
 from dash_bootstrap_templates import template_from_url
 from app_instance import esc
 from utils.commons import format_number, utc_to_local, local_to_utc
-from utils.commons import geolocate_ip_list, iso2_to_iso3
+from utils.commons import geolocate_ip_list, shorten
 from utils.graphs import empty_figure, adjust_palette
 from utils.graphs import calculate_interval_and_range
+from utils.graphs import custom_dark_template, build_safe_template
 from layouts.sidebar import theme_changer_aio
 import plotly.express as px
-import plotly.io as pio
-import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
 
@@ -153,7 +152,7 @@ def register_home_callbacks():
             color="family",
             color_discrete_map=color_map,
             barmode="stack",                  
-            title="Evolución temporal del malware",
+            title="Evolución temporal de familias",
             labels={
                 "family": "Familia",
                 "timestamp": "Período",
@@ -169,7 +168,9 @@ def register_home_callbacks():
                 tickangle=0
             ),
             yaxis_title="Nº de Muestras",
-            legend_title="Familia",
+            legend=dict(
+               title="Familias",
+            ),
             bargap=0.1,
             margin=dict(l=40, r=20, t=60, b=60),
             showlegend=(screen_width >= 576)
@@ -241,8 +242,8 @@ def register_home_callbacks():
 
         # Modifica el texto del hover
         fig.update_traces(
-            hovertemplate="<b>Familia:</b> %{y}<br>" +
-                  "<b>Nº de muestras:</b> %{x}<br>" +
+            hovertemplate="Familia: %{y}<br>" +
+                  "Nº de muestras: %{x}<br>" +
                   "<extra></extra>" 
         )
 
@@ -267,13 +268,19 @@ def register_home_callbacks():
         # Define template name based on the theme and color mode
         theme_name = template_from_url(theme)
         template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
+        if not color_mode_switch_on:
+            template_map = custom_dark_template(build_safe_template(template_name))
+        else:
+            template_map = build_safe_template(template_name)
 
         # Convert date range to UTC
         start_dt = pd.to_datetime(start_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
         end_dt = pd.to_datetime(end_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
 
 
-        df = esc.fetch_ips_by_family_agg(start_dt, end_dt, selected_families)
+        df = esc.fetch_ips_by_family_agg(
+            start_dt, end_dt, selected_families, size=100
+        )
         # Check if the DataFrame is empty or has no data
         if df.empty:
             return empty_figure()
@@ -297,21 +304,22 @@ def register_home_callbacks():
         # Create a scatter map using Plotly Express
         fig = px.scatter_map(
             data_frame=df,
-            lat="latitude_jittered",  # Latitude for countries
-            lon="longitude_jittered",  # Longitude for countries
+            lat="latitude_jittered",  
+            lon="longitude_jittered", 
             size="size_scaled",  # Size of circles corresponds to malware count
             color="family",  # Color differentiation based on malware families
             color_discrete_sequence=adjust_palette(df["family"].nunique()),
-            hover_name="country",  # Country names in hover tooltip
-            hover_data={"count": True, "family": True},  # Display malware count and family
+            hover_name="country",  
+            hover_data={"count": True, "family": True},  
+            text="ip",
             zoom=0.5,  # Initial zoom level
             center={"lat":20.92, "lon":17.28},  # Center the map
-            template=template_name,  # Apply the selected template
+            template=template_map,  
             custom_data=["ip", "count", "country", "family"]
         )
 
         fig.update_layout(
-            title="Orígenes de las amenazas",
+            title="Top IOCs (IPs) por países",
             mapbox={
                 "style": "open-street-map",
                 "uirevision": "constant"
@@ -323,20 +331,21 @@ def register_home_callbacks():
                y=1,
                xanchor="right",
                x=1,
-               font=dict(size=10),
+               font=dict(size=11),
                bgcolor="rgba(255,255,255,0.7)",
                bordercolor="rgba(0,0,0,0.1)",
                borderwidth=1
             ),
+            showlegend=(screen_width >= 576),
             margin=dict(l=20, r=20, t=60, b=20),
         )
 
         fig.update_traces(
             hovertemplate=(
-                "<b>Familia:</b> %{customdata[3]}<br>" +
-                "<b>IP:</b> %{customdata[0]}<br>" +
-                "<b>País:</b> %{customdata[2]}<br>" +
-                "<b>Nº de muestras:</b> %{customdata[1]}<br>" +
+                "Familia: %{customdata[3]}<br>" +
+                "IP: %{customdata[0]}<br>" +
+                "País: %{customdata[2]}<br>" +
+                "Nº de muestras: %{customdata[1]}<br>" +
                 "<extra></extra>"
             )
         )
@@ -393,7 +402,7 @@ def register_home_callbacks():
         )
 
         top_10["familias_label"] = top_10["families"].apply(
-            lambda x: f"<b>Familias:</b> {x}" if x else ""
+            lambda x: f"Familias: {shorten(x, max_len=80)}" if x else ""
         )
 
         # Generate color_map
@@ -423,9 +432,9 @@ def register_home_callbacks():
                 )
             ),
             texttemplate="%{customdata[0]}<br>%{value:,} (%{percentParent:.1%})",
-            hovertemplate="<b>Técnica:</b> %{label}<br>" +
-                          "<b>Nº de muestras:</b> %{value}<br>" +
-                          "<b>Táctica:</b> %{parent}<br>" +
+            hovertemplate="Técnica: %{label}<br>" +
+                          "Nº de muestras: %{value}<br>" +
+                          "Táctica: %{parent}<br>" +
                           "%{customdata[1]}<br>" +  
                           "<extra></extra>"
         )
@@ -450,14 +459,15 @@ def register_home_callbacks():
         prevent_initial_call=True
     )
     def update_templates(theme, color_mode_switch_on):
-        # Determinar el tema basado en el modo de color
         theme_name = template_from_url(theme)
         template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
 
-        # Crear el template común
-        patched_figure = Patch()
-        patched_figure["layout"]["template"] = pio.templates[template_name]
+        template_general = build_safe_template(template_name)
+        template_map = custom_dark_template(build_safe_template(template_name))
 
-        # Retornar el mismo template para todas las salidas
-        return patched_figure, patched_figure, patched_figure, patched_figure
+        patched_figure = Patch()
+        patched_figure["layout"]["template"] = template_general
+        patched_figure_map = Patch()
+        patched_figure_map["layout"]["template"] = template_map
+        return patched_figure, patched_figure_map, patched_figure, patched_figure
 

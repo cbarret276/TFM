@@ -7,6 +7,8 @@ import base64
 from io import BytesIO
 from wordcloud import WordCloud
 from itertools import cycle
+import copy
+import plotly.io as pio
 
 # Generate colors palett with interpolation
 def adjust_palette(num_colors=21, palette_name="tab20"):
@@ -35,7 +37,8 @@ def adjust_palette(num_colors=21, palette_name="tab20"):
 
     return interpolated_palette
 
-# This function creates a reusable Plotly figure with a centered message for empty data scenarios.
+# This function creates a reusable Plotly figure with a centered 
+# #message for empty data scenarios.
 def empty_figure(message="Sin datos"):
     fig = go.Figure()
     fig.add_annotation(
@@ -55,7 +58,8 @@ def empty_figure(message="Sin datos"):
     )
     return fig
 
-# This function calculates the aggregation interval and normalizes the start and end datetimes.
+# This function calculates the aggregation interval and normalizes 
+# the start and end datetimes.
 def calculate_interval_and_range(start, end):
     time_delta = (end - start).total_seconds()
 
@@ -70,13 +74,15 @@ def calculate_interval_and_range(start, end):
 
     return interval, start, end
 
-# This function assigns colors to categories based on their frequency in a DataFrame.
+# This function assigns colors to categories based on their 
+# frequency in a DataFrame.
 def assign_color_sequence(df, palette):
     family_order = df.groupby("family")["count"].sum().sort_values(ascending=False).index
     color_map = {fam: palette[i % len(palette)] for i, fam in enumerate(family_order)}
     return color_map
 
-# This function creates a color function for word clouds that assigns colors based on word frequency.
+# This function creates a color function for word clouds that assigns 
+# colors based on word frequency.
 def make_ordered_color_func(frequencies, cmap_name="tab20"):
     # Get ordered list of colors from colormap
     colors = [to_hex(c) for c in plt.get_cmap(cmap_name).colors]
@@ -95,14 +101,22 @@ def make_ordered_color_func(frequencies, cmap_name="tab20"):
     return color_func
 
 # This function generates a word cloud image from a frequency dictionary.
-def generate_wordcloud(frequencies, theme = "light"):
+def generate_wordcloud(frequencies, screen_width, theme = "light"):
     # Set background color based on theme
     bg_color = "white" if theme == "light" else "#212529"
 
+    # Resposive 
+    if screen_width<576:
+        width=400
+        height=500
+    else:
+        width=800
+        height=400
+
     # Create the WordCloud instance
     wc = WordCloud(
-        width=800,
-        height=400,
+        width=width,
+        height=height,
         background_color=bg_color,
         prefer_horizontal=1.0,  # Force horizontal layout
     ).generate_from_frequencies(frequencies)
@@ -111,12 +125,41 @@ def generate_wordcloud(frequencies, theme = "light"):
 
     # Save the image into a memory buffer
     buffer = BytesIO()
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wc, interpolation="bilinear")
-    plt.axis("off")  # Remove axes for clean appearance
-    plt.tight_layout()
-    plt.savefig(buffer, format="png", facecolor=bg_color)
-    plt.close()
+    wc.to_image().save(buffer, format="PNG")
+    buffer.seek(0)
+    img_base64 = base64.b64encode(buffer.read()).decode("utf-8")
 
     # Encode the PNG image in base64 to embed it in Dash as HTML img src
-    return base64.b64encode(buffer.getvalue()).decode()
+    return img_base64
+
+# Customize template object in map dark mode render
+def custom_dark_template(custom_template):
+    FONT_DARK_COLOR="#333333"
+    custom_template.layout.legend.font.color = FONT_DARK_COLOR
+    custom_template.layout.legend.title.font.color = FONT_DARK_COLOR
+
+    custom_template.data["scattermap"] = [
+        go.Scattermap(
+            textfont=dict(color=FONT_DARK_COLOR)
+        )
+    ]
+
+    return custom_template
+
+# Secure copy from layout template
+def build_safe_template(template_name: str) -> go.layout.Template:
+    tpl = pio.templates[template_name]
+
+    layout = copy.deepcopy(tpl.layout) if tpl.layout else go.Layout()
+
+    data = {}
+    for k in dir(tpl.data):
+        if not k.startswith("_") and hasattr(tpl.data, k):
+            v = getattr(tpl.data, k)
+            if isinstance(v, tuple):  # solo tipos de traza
+                data[k] = copy.deepcopy(v)
+
+    t = go.layout.Template(layout=layout)
+    for k, v in data.items():
+        t.data[k] = v
+    return t

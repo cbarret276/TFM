@@ -91,7 +91,6 @@ def register_render_page_content():
 
 
 def register_filters_callbacks():
-
     # Callback to update the global filters based on user input
     @callback(
         Output("global-filters", "data"),
@@ -159,7 +158,7 @@ def register_filters_callbacks():
         triggered = ctx.triggered_id
         now = datetime.now(timezone.utc).replace(microsecond=0)
 
-        # Caso 1: Restaurar desde global-filters
+        # Case 1: Restore global-filters
         if triggered == "url":
             if stored_data:
                 return (
@@ -177,7 +176,7 @@ def register_filters_callbacks():
                     start, end, None, None
                 )
 
-        # Caso 2: Aplicar rango predefinido
+        # Case 2: Apply predefine ranges
         if triggered == "time-range-selector":
             if range_selected == "today":
                 start = now.replace(hour=0, minute=0, second=0)
@@ -197,12 +196,12 @@ def register_filters_callbacks():
             else:
                 return no_update, no_update, no_update, no_update
 
-            # Asegura zona UTC y sin microsegundos
+            # Force UTC
             start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
             end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
 
             return start, end, no_update, no_update
 
-        # Caso 3: El usuario modificó manualmente las fechas
+        # Case 3: User's modified dates
         if triggered in ["datetime-picker-start", "datetime-picker-end"]:
             return manual_start, manual_end, no_update, ""

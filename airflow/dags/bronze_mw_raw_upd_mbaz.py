@@ -29,8 +29,6 @@ default_args = {
     'retry_delay': timedelta(minutes=1),  # Delay between retries
 }
 
-
-# Definir el DAG y la frecuencia de ejecución
 dag = DAG(
     'gen_bronze_mw_raw_upd_mbaz',
     default_args=default_args,
@@ -75,8 +73,6 @@ def fetch_hashes_from_elastic(**context):
     end_date = context['data_interval_end'].replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     print("Date range: ",f"from:{start_date} to:{end_date}")
-
-    # Connect to Elasticsearch
     es = get_elasticsearch_client()
 
     # Query Elasticsearch for hashes within the time window
@@ -195,8 +191,6 @@ def update_elastic_with_bazaar_data(bazaar_data, **context):
     else:
         print("No documents to update.")
 
-
-# Definir tareas usando PythonOperator
 
 # Task 1: Fetch hashes from Elasticsearch
 fetch_hashes_task = PythonOperator(

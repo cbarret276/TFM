@@ -1,4 +1,3 @@
-# Import packages
 from app_instance import app
 from dash import dcc, html
 from dash_mantine_components import MantineProvider 
@@ -44,7 +43,6 @@ register_indicators_callbacks()
 register_tactics_callbacks()
 register_geolocation_callbacks()
 register_analysis_callbacks()
-
 
 server = app.server
 

@@ -9,7 +9,7 @@ from utils.graphs import empty_figure
 from app_instance import esc
 
 def register_geolocation_callbacks():
-
+    
     @callback(
         Output("geo-map", "figure"),
         [
@@ -42,7 +42,7 @@ def register_geolocation_callbacks():
             pd.to_datetime(end_date).isoformat(), tz_data
         )    
 
-        # Selector del tipo de visualización
+        # Type of visualization
         if view_type == "samples":            
             # Get sample count by country
             df = esc.fetch_malware_by_country(
@@ -79,11 +79,11 @@ def register_geolocation_callbacks():
             values = country_agg[z_field]
             color_title = "Nº de IoCs (IPs)"
             colorscale = [
-                [0.0, "#fde0dc"],  # rojo muy claro
+                [0.0, "#fde0dc"],  
                 [0.25, "#f9bdbb"],
                 [0.5, "#ef5350"],
                 [0.75, "#e53935"],
-                [1.0, "#b71c1c"]   # rojo intenso
+                [1.0, "#b71c1c"]   
             ]
 
         elif view_type == "ttps":
@@ -106,7 +106,7 @@ def register_geolocation_callbacks():
             colorscale=[[0, "#dceeff"], [1, "#1f77b4"]]
 
 
-        # Crear figura con go.Choropleth
+        # Make figure with go.Choropleth
         fig = go.Figure(data=go.Choropleth(
             locations=df["country_code"],
             z=values,

@@ -27,10 +27,12 @@
   overflow: hidden;
   white-space: nowrap;
 }
+
 /* Sidebar logo rounding */
 .sidebar-header img {
   border-radius: var(--bs-border-radius);
 }
+
 /* Hide header title by default */
 .sidebar-header h2 {
   opacity: 0;
@@ -38,31 +40,37 @@
   margin-bottom: 0;
   transition: opacity 0.1s ease-in-out;
 }
+
 /* Show header title on hover */
 .sidebar:hover .sidebar-header h2 {
   opacity: 1;
 }
+
 /* Navigation links in sidebar */
 .sidebar .nav-link {
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
 }
+
 /* Icon spacing */
 .sidebar .nav-link i {
   width: 1rem;
 }
+
 /* Hide nav labels by default */
 .sidebar .nav-link span {
   visibility: hidden;
   opacity: 0;
   transition: opacity 0.1s ease-in-out;
 }
+
 /* Show labels on hover */
 .sidebar:hover .nav-link span {
   visibility: visible;
   opacity: 1;
 }
+
 /* Theme switch button base */
 .sidebar .btn-theme-changer {
   border: none;
@@ -71,34 +79,42 @@
   align-items: center;
   margin-left: 0.25em;
 }
+
 .btn-theme-changer:hover {
   color: #d1ffd6;
 }
+
 .sidebar:hover .btn-theme-changer {
   margin-left: -0.4em;
 }
+
 .btn-theme-changer i {
   font-size: 1em;
 }
+
 /* Hide theme switch icons by default */
 .sidebar .fa-switch,
 .sidebar #span-theme-switch {
   display: none;
   opacity: 1;
 }
+
 /* Show theme switch icons on hover */
 .sidebar:hover .fa-switch,
 .sidebar:hover #span-theme-switch {
   display: inline-block;
   opacity: 1;
 }
+
 /* Sidebar configuration spans */
 .span-config {
   display: block;
 }
+
 .sidebar .span-config {
   margin-left: 0.2em;
 }
+
 .sidebar:hover .span-config {
   margin-left: 1.2em;
 }
@@ -110,9 +126,11 @@
   padding: 1rem 1rem;
   margin-left: 60px;
 }
+
 .sidebar:hover ~ .content {
   margin-left: 14rem;
 }
+
 .col {
   margin-top: 1.25em !important;
 }
@@ -129,26 +147,29 @@
 .card {
   text-align: center;
 }
+
 .card .card-kpi-title {
   text-align: left;
   font-weight: lighter;
 }
+
 .card .p-0 .card-kpi-title {  
   padding-left: 20px;
   font-size: 1.1rem;
   font-weight: 400;
   margin-top: 10px;
 }
+
 .card .card-kpi-value {
   font-size: 2.3rem;
 }
+
 .card .card-kpi-target {
   font-size: 1.5rem;
   font-weight: lighter;
 }
 
 /* Graphs Styling */
-
 .svg-container {
   height: 400px !important;; 
 }
@@ -201,6 +222,11 @@
 .maplibregl-ctrl-attrib.maplibregl-compact-show,
 .maplibregl-ctrl-attrib.maplibregl-compact {
   visibility: hidden !important;
+}
+
+/*Customize dark bg color for mantine components*/
+[data-mantine-color-scheme='dark'] {
+  --mantine-color-dark-6: #212529;  /* fondo por defecto */
 }
 
 /* Hide sidebar in small screens, show only in md and up */

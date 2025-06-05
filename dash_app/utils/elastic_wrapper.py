@@ -95,7 +95,7 @@ class ElasticContext:
             start_datetime=None,
             end_datetime=None,
             families=None, 
-            limit=50
+            size=100
         ):
 
         query_filters = [
@@ -129,19 +129,19 @@ class ElasticContext:
                 "ips_count": {
                     "terms": {
                         "field": "ips",
-                        "size": limit
+                        "size": size
                     }
                 },
                 "domains_count": {
                     "terms": {
                         "field": "domains",
-                        "size": limit
+                        "size": size
                     }
                 },
                 "ttps_count": {
                     "terms": {
                         "field": "ttp",
-                        "size": limit
+                        "size": size
                     }
                 }
             },
@@ -169,9 +169,6 @@ class ElasticContext:
 
     # Method to fetch IPs by family using aggregations
     def fetch_ips_by_family_agg(self, start_dt, end_dt, families=None, size=200):
-        """
-        Devuelve IPs observadas agrupadas por familia usando agregaciones (más eficiente).
-        """
         filters = [
             {"range": {
                 "created": {
@@ -193,7 +190,7 @@ class ElasticContext:
             },
             "aggs": {
                 "by_family": {
-                    "terms": {"field": "family", "size": 30},
+                    "terms": {"field": "family", "size": size*0.25},
                     "aggs": {
                         "by_ip": {
                             "terms": {"field": "ips", "size": size}
@@ -706,7 +703,7 @@ class ElasticContext:
         families=None, 
         size=1000, enrich=True
     ):
-        ip_counts, _, _ = self.fetch_aggregated_iocs(start_datetime, end_datetime, families, limit=size)
+        ip_counts, _, _ = self.fetch_aggregated_iocs(start_datetime, end_datetime, families, size=size)
         if not ip_counts:
             return pd.DataFrame()
 

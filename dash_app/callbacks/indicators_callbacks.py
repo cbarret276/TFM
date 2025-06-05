@@ -2,17 +2,18 @@ from dash import Input, Output, State, callback, html, Patch
 from dash_bootstrap_templates import template_from_url
 from app_instance import esc
 from layouts.sidebar import theme_changer_aio
-from utils.graphs import empty_figure, adjust_palette, generate_wordcloud
+from utils.graphs import empty_figure, adjust_palette
+from utils.graphs import generate_wordcloud, custom_dark_template, build_safe_template
 from utils.commons import geolocate_ip_list, normalize_series
 from utils.commons import format_number
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.io as pio
 import plotly.express as px
+import copy
 
 
 def register_indicators_callbacks():
-
     # Callback to update the IOCs KPI
     @callback(
         [
@@ -32,14 +33,6 @@ def register_indicators_callbacks():
         ]
     )
     def update_kpis_ioc(_, start_date, end_date, selected_families, tz_data):
-        """
-        Updates the four IOC KPI cards based on filtered data:
-        - Total number of IOCs
-        - Unique IPs
-        - Unique domains
-        - Score average (for samples with IOCs)
-        """
-
         # Convert date range to UTC
         start_dt = pd.to_datetime(start_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
         end_dt = pd.to_datetime(end_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
@@ -74,6 +67,7 @@ def register_indicators_callbacks():
             Input("interval", "n_intervals"),
             Input("datetime-picker-start", "value"),
             Input("datetime-picker-end", "value"),
+            Input("screen-width", "data"),
             Input("family-dropdown", "value"),
             Input("switch", "value"),
         ],
@@ -82,13 +76,9 @@ def register_indicators_callbacks():
         ]
     )
     def update_domain_wordcloud(
-        _, start_date, end_date, 
+        _, start_date, end_date, screen_width,
         selected_families, switch_on, tz_data
     ):
-        """
-        Generates a domain frequency wordcloud based on filtered IOC data.
-        The result is returned as a base64-encoded PNG image embedded in the dashboard.
-        """
         # Resolve the current visual theme (light or dark)
         theme_mode = "light" if switch_on else "dark"
 
@@ -100,7 +90,9 @@ def register_indicators_callbacks():
         families = None if not selected_families else [f.lower() for f in selected_families]
 
         # Fetch aggregated domain frequencies from Elasticsearch
-        _, domain_counts, _ = esc.fetch_aggregated_iocs(start_dt, end_dt, families)
+        _, domain_counts, _ = esc.fetch_aggregated_iocs(
+            start_dt, end_dt, families, size=50
+        )
 
         # Handle empty result
         if not domain_counts:
@@ -119,7 +111,7 @@ def register_indicators_callbacks():
         frequencies = {item["domain"]: item["count"] for item in domain_counts}
         
         # Generate base64 image for wordcloud
-        img_base64 = generate_wordcloud(frequencies, theme=theme_mode)
+        img_base64 = generate_wordcloud(frequencies, screen_width, theme=theme_mode)
         return html.Div([
             html.H5("Dominios más frecuentes", className="card-kpi-title"),
             html.Img(
@@ -127,7 +119,7 @@ def register_indicators_callbacks():
                 className="img-fluid",
                 style={"maxHeight": "360px", "objectFit": "contain"}
             )
-        ], style={"minHeight": "400px"})
+        ], style={"minHeight": "400px","width": "100%", "display": "flex", "flexDirection": "column"})
     
 
     @callback(
@@ -146,11 +138,6 @@ def register_indicators_callbacks():
     )
     def update_top_ips(_, start_date, end_date, selected_families,
                     theme, switch_on, tz_data):
-        """
-        Builds a bar chart of the Top 10 IP addresses based on frequency
-        in the specified date range and optional family filter.
-        """
-
         # Resolve theme
         theme_name = template_from_url(theme)
         template_name = theme_name if switch_on else theme_name + "_dark"
@@ -198,7 +185,7 @@ def register_indicators_callbacks():
         )
 
         fig.update_traces(
-            hovertemplate="<b>IP:</b> %{y}<br><b>Frecuencia:</b> %{x}<extra></extra>"
+            hovertemplate="IP: %{y}<br>Frecuencia: %{x}<extra></extra>"
         )
 
         return fig
@@ -220,11 +207,6 @@ def register_indicators_callbacks():
         ]
     )
     def update_sankey_ioc_threatfox(_, start_date, end_date, selected_families, theme, switch_on, tz_data):
-        """
-        Builds a Sankey diagram with:
-        IP → confidence_level → threat_type → malware → country
-        Applies current theme and consistent palette
-        """
         theme_name = template_from_url(theme)
         template_name = theme_name if switch_on else theme_name + "_dark"
 
@@ -285,6 +267,7 @@ def register_indicators_callbacks():
             Input("interval", "n_intervals"),
             Input("datetime-picker-start", "value"),
             Input("datetime-picker-end", "value"),
+            Input("screen-width", "data"),
             Input("family-dropdown", "value")
         ],
         [
@@ -294,30 +277,29 @@ def register_indicators_callbacks():
         ]
     )
     def update_ip_map(_, 
-                      start_date, end_date, selected_families,
-                    theme, switch_on, tz_data):
-
-        """
-        Builds a geographic bubble map showing the top 50 most frequent IP addresses,
-        aggregated by country (or city if precision is available).
-        """
-
+                    start_date, end_date, screen_width,
+                    selected_families, theme, color_mode_switch_on, tz_data):
         theme_name = template_from_url(theme)
-        template_name = theme_name if switch_on else theme_name + "_dark"
+        template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
+       
+        if not color_mode_switch_on:
+            template_map = custom_dark_template(build_safe_template(template_name))
+        else:
+            template_map = build_safe_template(template_name)
 
         start_dt = pd.to_datetime(start_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
         end_dt = pd.to_datetime(end_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
         families = None if not selected_families else [f.lower() for f in selected_families]
 
-        # Obtener top IPs
+        # Get top IPs
         ip_counts, _, _ = esc.fetch_aggregated_iocs(start_dt, end_dt, families)
 
         if ip_counts is None or not ip_counts:
             return empty_figure()
 
-        df = pd.DataFrame(ip_counts).nlargest(50, "count")
+        df = pd.DataFrame(ip_counts).nlargest(100, "count")
 
-        # Geolocalizar IPs
+        # Geolocate
         enriched = geolocate_ip_list(df["ip"].tolist())
         geo_df = pd.DataFrame(enriched).merge(df, on="ip")
 
@@ -328,38 +310,63 @@ def register_indicators_callbacks():
             "longitude": "first"
         })
 
+
         df_country["size_normalized"] = normalize_series(df_country["count"], 20, 40)
         df_country["label"] = df_country["country"] + "<br>(" + df_country["count"].astype(str) +")" 
 
-        # Generar mapa interactivo
+        df_country = df_country.rename(columns={
+            "country": "País",
+            "count": "Nº muestras"
+        })
+
+        # Generate interactive map
         fig = px.scatter_map(
             data_frame=df_country,
             lat="latitude",
             lon="longitude",
-            hover_name="country",
             size="size_normalized",
             text="label",
-            color="country",
-            color_discrete_sequence=adjust_palette(df_country["country"].nunique()),
+            color="País",
+            color_discrete_sequence=adjust_palette(df_country["País"].nunique()),
             zoom=0.5,  # Initial zoom level
             center={"lat":20.92, "lon":17.28},  # Center the map
-            template=template_name
+            hover_data={
+                "Nº muestras": True,
+                "País": True,
+                "latitude": False,         # Oculta
+                "longitude": False,        # Oculta
+                "size_normalized": False,  # Oculta
+                "label": False             # Oculta si ya está en 'text'
+            },
+            template=template_map
         )
 
         # Update layout
         fig.update_layout(
-            title="Distribución geográfica Top 50 IPs",
+            title="Distribución geográfica Top Países IoC",
             mapbox={                        
                 "style": "open-street-map",  # style of the map
                 "uirevision": "constant"
             },
-            showlegend=False,
+            legend=dict(
+               title="Países",
+               orientation="v",
+               yanchor="top",
+               y=1,
+               xanchor="right",
+               x=1,
+               font=dict(size=11),
+               bgcolor="rgba(255,255,255,0.7)",
+               bordercolor="rgba(0,0,0,0.1)",
+               borderwidth=1
+            ),
+            showlegend=(screen_width >= 576),
             margin=dict(l=20, r=20, t=60, b=20)
         )
         
         return fig
 
-    
+
     # Callback to update themes
     @callback(
         Output("map-top50-ips", "figure", allow_duplicate=True),
@@ -372,6 +379,13 @@ def register_indicators_callbacks():
     def update_themes(theme, color_mode_switch_on):
         theme_name = template_from_url(theme)
         template_name = theme_name if color_mode_switch_on else theme_name + "_dark"
+
+        template_general = build_safe_template(template_name)
+        template_map = custom_dark_template(build_safe_template(template_name))
+
         patched_figure = Patch()
-        patched_figure["layout"]["template"] = pio.templates[template_name]
-        return patched_figure, patched_figure, patched_figure
+        patched_figure["layout"]["template"] = template_general
+        patched_figure_map = Patch()
+        patched_figure_map["layout"]["template"] = template_map
+        return patched_figure_map, patched_figure, patched_figure
+

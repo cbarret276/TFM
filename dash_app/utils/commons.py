@@ -131,11 +131,9 @@ def shorten(text, max_len=30):
     parts = text.split("-")
     n = len(parts)
     
-    # Reservar caracteres para los separadores (n-1 guiones)
     reserved = n - 1
     available = max_len - reserved
     
-    # Distribuir caracteres proporcionalmente entre tramos
     per_part = available // n
     shortened_parts = []
 

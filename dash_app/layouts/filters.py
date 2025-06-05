@@ -14,12 +14,12 @@ def get_filters(initial_start=None, initial_end=None):
 
     return html.Div(
         [
-            # Primera fila: fechas
+            # First Row
             dbc.Row(
                 [
                      dbc.Col(
                         dbc.Row([
-                            dbc.Col(html.Label("Rango:", className="text-nowrap me-1"), width="auto"),
+                            dbc.Col(html.Label("Tipo de rango:", className="text-nowrap me-1"), width="auto"),
                             dbc.Col(
                                 dcc.Dropdown(
                                     id="time-range-selector",
@@ -37,12 +37,12 @@ def get_filters(initial_start=None, initial_end=None):
                                 className="m-0"
                             ),
                         ], className="align-items-center"),
-                        xs=12, md=4, lg=3, xl=3, xxl=2, className="mb-2"
+                        xs=12, md=5, lg=4, xl=4, xxl=3, className="mb-2"
                     ),
 
                     dbc.Col(
                         dbc.Row([
-                            dbc.Col(html.Label("Desde:", htmlFor="datetime-picker-start", className="text-nowrap me-1"), width="auto"),
+                            dbc.Col(html.Label("Inicio:", htmlFor="datetime-picker-start", className="text-nowrap me-1"), width="auto"),
                             dbc.Col(
                                 dmc.DateTimePicker(
                                     id="datetime-picker-start",
@@ -58,7 +58,7 @@ def get_filters(initial_start=None, initial_end=None):
 
                     dbc.Col(
                         dbc.Row([
-                            dbc.Col(html.Label("Hasta:", htmlFor="datetime-picker-end", className="text-nowrap me-1"), width="auto"),
+                            dbc.Col(html.Label("Fin:", htmlFor="datetime-picker-end", className="text-nowrap me-1"), width="auto"),
                             dbc.Col(
                                 dmc.DateTimePicker(
                                     id="datetime-picker-end",
@@ -76,7 +76,7 @@ def get_filters(initial_start=None, initial_end=None):
                 className="gx-2 gy-1 header-controls"
             ),
 
-            # Segunda fila: filtro por familia
+            # Second row
             dbc.Row(
                 [
                     dbc.Col(

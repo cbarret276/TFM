@@ -199,6 +199,7 @@ def register_tactics_callbacks():
             Input("interval", "n_intervals"),
             Input("datetime-picker-start", "value"),
             Input("datetime-picker-end", "value"),
+            Input("screen-width", "data"),
             Input("family-dropdown", "value")
         ],
         [
@@ -208,7 +209,7 @@ def register_tactics_callbacks():
         ]
     )
     def update_temporal_techniques(
-        _, start_datetime, end_datetime, 
+        _, start_datetime, end_datetime, screen_width,
         selected_families, theme, switch_on, tz_name
     ):
         template_name = template_from_url(theme)
@@ -250,7 +251,6 @@ def register_tactics_callbacks():
             color="tactic",
             color_discrete_sequence=color_map,
             barmode="stack",
-            labels={"timestamp": "Fecha", "count": "Técnicas", "tactic": "Táctica"},
             template=template_name,
             title="Evolución temporal de técnicas observadas"
         )
@@ -258,8 +258,15 @@ def register_tactics_callbacks():
         fig.update_layout(
             margin=dict(l=40, r=20, t=50, b=40),
             xaxis_title="Tiempo",
-            yaxis_title="Nº de Técnicas",
+            yaxis_title="Nº de muestras",
+            showlegend=(screen_width >= 576),
             legend_title="Táctica"
+        )
+
+        fig.update_traces(
+            hovertemplate="Táctica: %{fullData.name}<br>" +
+                        "Fecha: %{x}<br>" +
+                        "Nº de muestras: %{y}<extra></extra>"
         )
 
         return fig
@@ -272,6 +279,7 @@ def register_tactics_callbacks():
             Input("interval", "n_intervals"),
             Input("datetime-picker-start", "value"),
             Input("datetime-picker-end", "value"),
+            Input("screen-width", "data"),
             Input("family-dropdown", "value")
         ],
         [
@@ -281,8 +289,8 @@ def register_tactics_callbacks():
         ]
     )
     def update_heatmap(
-        _, start_datetime, end_datetime, selected_families, 
-        theme, switch_on, tz_name
+        _, start_datetime, end_datetime, screen_width,
+        selected_families, theme, switch_on, tz_name
     ):
         theme_name = template_from_url(theme)
         template_name = theme_name if switch_on else theme_name + "_dark"
@@ -330,7 +338,7 @@ def register_tactics_callbacks():
 
         fig = px.imshow(
             df_pivot,
-            labels=dict(x="Familia", y="Táctica", color="Frecuencia"),
+            labels=dict(x="Familia", y="Táctica", color="Nº muestras"),
             x=df_pivot.columns,
             y=short_y,
             text_auto=True,
@@ -340,10 +348,19 @@ def register_tactics_callbacks():
         fig.update_layout(
             title="Tácticas y familias",
             autosize=True,
-            width=None,
             template=template_name,
             margin=dict(l=20, r=0, t=50, b=20)
         )
+
+        if screen_width < 576:
+            fig.update_layout(
+                coloraxis_colorbar=dict(
+                    orientation="h",
+                    x=0.25,
+                    xanchor="center",
+                    y=-0.2
+                )
+            )
 
         return fig
 

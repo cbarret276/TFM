@@ -57,7 +57,7 @@ INDEX_SETTINGS = {
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2025, 5, 29, 13, 30), # days_ago(6)
+    'start_date': datetime(2025, 5, 10, 13, 30), # days_ago(6)
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,

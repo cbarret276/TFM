@@ -101,7 +101,7 @@ sidebar_mobile = html.Div(
                 dbc.NavLink([html.I(className="fas fa-chess-knight me-2"), html.Span("Tácticas")], href="/tactics", active="exact"),
                 dbc.NavLink([html.I(className="fas fa-exclamation-triangle me-2"), html.Span("Indicadores")], href="/indicators", active="exact"),
                 dbc.NavLink([html.I(className="fas fa-globe me-2"), html.Span("Geografía")], href="/geolocation", active="exact"),
-                dbc.NavLink([html.I(className="fas fa-clock me-2"), html.Span("Temporal")], href="/time", active="exact"),
+                dbc.NavLink([html.I(className="fas fa-clock me-2"), html.Span("Análisis")], href="/analysis", active="exact"),
             ],
             vertical=True,
             pills=True
