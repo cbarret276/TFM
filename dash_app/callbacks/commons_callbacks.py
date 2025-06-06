@@ -169,21 +169,24 @@ def register_filters_callbacks():
         Input("time-range-selector", "value"),
         Input("datetime-picker-start", "value"),
         Input("datetime-picker-end", "value"),
-        State("datetime-picker-start", "value"),
-        State("datetime-picker-end", "value"),
+        State("global-filters", "data"),
         prevent_initial_call=True
     )
     def update_manual_or_range(
         range_selected, manual_start, manual_end,
-        prev_start, prev_end
+        stored_data
     ):
         triggered = ctx.triggered_id
         now = datetime.now(timezone.utc).replace(microsecond=0)
 
-        if manual_start==prev_start and manual_end==prev_end:
-            return no_update, no_update, no_update, no_update
+        prev_start=stored_data.get("start")
+        prev_end=stored_data.get("end")        
+        prev_range=stored_data.get("range")
         
         if triggered == "time-range-selector":
+            if (prev_range==range_selected):
+                return no_update, no_update, no_update, no_update
+            
             if range_selected == "today":
                 start = now.replace(hour=0, minute=0, second=0)
                 end = start + timedelta(days=1)
@@ -209,6 +212,8 @@ def register_filters_callbacks():
 
 
         elif triggered in ["datetime-picker-start", "datetime-picker-end"]:
+            if (manual_start==prev_start and manual_end==prev_end):
+                return no_update, no_update, no_update, no_update
             return manual_start, manual_end, no_update, ""
 
 
