@@ -4,6 +4,7 @@ from dash_mantine_components import MantineProvider
 import uuid
 from layouts.sidebar import sidebar
 from layouts.top_navbar import top_navbar, mobile_sidebar
+from layouts.footer import footer
 from layouts.dummy_components import get_dummy_components
 from callbacks.commons_callbacks import register_filters_callbacks
 from callbacks.commons_callbacks import register_render_page_content
@@ -29,6 +30,7 @@ def serve_layout():
             mobile_sidebar,
             sidebar,
             html.Div(id="page-content", className="content"),
+            footer,
             get_dummy_components()
         ])
     )

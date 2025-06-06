@@ -134,49 +134,55 @@ def register_filters_callbacks():
         return options
     
  
-    # Callback to restore filters from session
     @callback(
         Output("datetime-picker-start", "value"),
         Output("datetime-picker-end", "value"),
         Output("family-dropdown", "value"),
         Output("time-range-selector", "value"),
-
         Input("url", "pathname"),
+        State("global-filters", "data"),
+        prevent_initial_call=True
+    )
+    def restore_filters(pathname, stored_data): 
+        if stored_data:
+            return (
+                stored_data.get("start"),
+                stored_data.get("end"),
+                stored_data.get("families"),
+                stored_data.get("range")
+            )
+        else: 
+            start = datetime.now.replace(hour=0, minute=0, second=0)
+            end = start + timedelta(days=1)
+            start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+            end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+            return (
+                start, end, None, None
+            )
+
+ 
+    @callback(
+        Output("datetime-picker-start", "value", allow_duplicate=True),
+        Output("datetime-picker-end", "value", allow_duplicate=True),
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Output("time-range-selector", "value", allow_duplicate=True),
         Input("time-range-selector", "value"),
         Input("datetime-picker-start", "value"),
         Input("datetime-picker-end", "value"),
-
-        State("global-filters", "data"),
         State("datetime-picker-start", "value"),
         State("datetime-picker-end", "value"),
         prevent_initial_call=True
     )
-    def unified_filter_logic(
-        path, range_selected, manual_start, manual_end, 
-        stored_data, start_state, end_state
+    def update_manual_or_range(
+        range_selected, manual_start, manual_end,
+        prev_start, prev_end
     ):
         triggered = ctx.triggered_id
         now = datetime.now(timezone.utc).replace(microsecond=0)
 
-        # Case 1: Restore global-filters
-        if triggered == "url":
-            if stored_data:
-                return (
-                    stored_data.get("start"),
-                    stored_data.get("end"),
-                    stored_data.get("families"),
-                    stored_data.get("range")
-                )
-            else: 
-                start = now.replace(hour=0, minute=0, second=0)
-                end = start + timedelta(days=1)
-                start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-                end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-                return (
-                    start, end, None, None
-                )
-
-        # Case 2: Apply predefine ranges
+        if manual_start==prev_start and manual_end==prev_end:
+            return no_update, no_update, no_update, no_update
+        
         if triggered == "time-range-selector":
             if range_selected == "today":
                 start = now.replace(hour=0, minute=0, second=0)
@@ -196,12 +202,14 @@ def register_filters_callbacks():
             else:
                 return no_update, no_update, no_update, no_update
 
-            # Force UTC
             start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
             end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-
+            
             return start, end, no_update, no_update
 
-        # Case 3: User's modified dates
-        if triggered in ["datetime-picker-start", "datetime-picker-end"]:
+
+        elif triggered in ["datetime-picker-start", "datetime-picker-end"]:
             return manual_start, manual_end, no_update, ""
+
+
+   
