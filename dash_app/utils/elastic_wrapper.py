@@ -190,7 +190,7 @@ class ElasticContext:
             },
             "aggs": {
                 "by_family": {
-                    "terms": {"field": "family", "size": size*0.25},
+                    "terms": {"field": "family", "size": size},
                     "aggs": {
                         "by_ip": {
                             "terms": {"field": "ips", "size": size}

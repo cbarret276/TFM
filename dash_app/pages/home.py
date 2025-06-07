@@ -14,7 +14,8 @@ card1_1 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+    dbc.Tooltip("Número de muestras analizadas con un score superior a 5.", target="kpi1-value", placement="top")
     ])
 
 # Card 1.2
@@ -29,7 +30,8 @@ card1_2 = dbc.Card([
                     className="card-kpi-value",
                 ),            
             ])
-        )
+        ),
+    dbc.Tooltip("Número de muestras vinculadas a una familia de malware.", target="kpi2-value", placement="top")
     ])
 
 # Card 1.3
@@ -44,7 +46,8 @@ card1_3 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+    dbc.Tooltip("Promedio del score de peligrosidad asignado por Triage.", target="kpi3-value", placement="top")
     ])
 
 # Card 1.4
@@ -59,7 +62,8 @@ card1_4 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+    dbc.Tooltip("Número de familias de malware detectadas.", target="kpi4-value", placement="top")
     ])
 
 
@@ -75,7 +79,8 @@ card1_5 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+    dbc.Tooltip("Número de indicadores de compromiso (direcciones IP y dominios) detectados.", target="kpi5-value", placement="top")
     ])
 
 

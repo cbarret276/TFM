@@ -178,6 +178,27 @@ def register_home_callbacks():
 
         return fig
 
+
+    @callback(
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Input("histogram-graph", "clickData"),
+        State("histogram-graph", "figure"),
+        prevent_initial_call=True
+    )
+    def update_family_dropdown_from_histogram(clickData, figure):
+        if not clickData or "points" not in clickData:
+            return no_update
+
+        curve_number = clickData["points"][0].get("curveNumber")
+        if curve_number is None:
+            return no_update
+
+        try:
+            family = figure["data"][curve_number]["name"]
+            return [family]
+        except (IndexError, KeyError, TypeError):
+            return no_update
+
     # Update graph-bar with families
     @callback(
         Output("graph-bar", "figure"),
@@ -249,6 +270,21 @@ def register_home_callbacks():
 
         return fig
 
+
+    # Click in family grahpbar update famili filter 
+    @callback(
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Input("graph-bar", "clickData"),
+        State("family-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def update_family_dropdown_from_bar(clickData, current_value):
+        if not clickData or "points" not in clickData:
+            return no_update
+
+        selected_family = clickData["points"][0]["y"]
+        return [selected_family]
+
     # Callback to update the map figure based on the selected time interval and theme
     @callback(
         Output("map", "figure"),
@@ -277,9 +313,8 @@ def register_home_callbacks():
         start_dt = pd.to_datetime(start_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
         end_dt = pd.to_datetime(end_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
 
-
         df = esc.fetch_ips_by_family_agg(
-            start_dt, end_dt, selected_families, size=50
+            start_dt, end_dt, selected_families, size=20
         )
         # Check if the DataFrame is empty or has no data
         if df.empty:
@@ -289,7 +324,6 @@ def register_home_callbacks():
         if selected_families not in (None, []):
             df = df[df["family"].isin(selected_families)]
 
-        
         # Geolocate IPs
         geo_data = geolocate_ip_list(df["ip"].tolist())
         df_geo = pd.DataFrame(geo_data)
@@ -352,6 +386,21 @@ def register_home_callbacks():
 
         return fig
 
+    @callback(
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Input("map", "clickData"),
+        prevent_initial_call=True
+    )
+    def update_family_dropdown_from_map(clickData):
+        if not clickData or "points" not in clickData:
+            return no_update
+
+        family = clickData["points"][0].get("customdata", [None, None, None, None])[3]
+        if family:
+            return [family]
+
+        return no_update
+
     # Update graph-treemap with tactics
     @callback(
         Output("graph-treemap", "figure"),
@@ -397,6 +446,7 @@ def register_home_callbacks():
         # Sort and extract the top 10 TTP
         df_sorted = df.sort_values(by='count', ascending=False)
         top_10 = df_sorted.head(10).reset_index(drop=True)        
+
         top_10["label_short"] = top_10["technique"].apply(
            lambda x: x[:25] + "..." if len(x) > 25 else x
         )
@@ -417,7 +467,7 @@ def register_home_callbacks():
             title="Top 10 tácticas MITRE ATT&CK®",
             color="technique",
             color_discrete_map={'(?)':'white'} | color_map,
-            custom_data=["label_short", "familias_label"],
+            custom_data=["label_short", "familias_label", "families"],
             template=template_name
         )
 
@@ -444,20 +494,6 @@ def register_home_callbacks():
         )
 
         return fig
-
-    # Click in family grahpbar update famili filter 
-    @callback(
-        Output("family-dropdown", "value", allow_duplicate=True),
-        Input("graph-bar", "clickData"),
-        State("family-dropdown", "value"),
-        prevent_initial_call=True
-    )
-    def update_family_dropdown_from_bar(clickData, current_value):
-        if not clickData or "points" not in clickData:
-            return no_update
-
-        selected_family = clickData["points"][0]["y"]
-        return [selected_family]
 
     # Update figures with the new theme much faster
     @callback(
