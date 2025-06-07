@@ -25,8 +25,8 @@ def get_filters(initial_start=None, initial_end=None):
                                     id="time-range-selector",
                                     options=[
                                         {"label": "Día actual", "value": "today"},
-                                        {"label": "Últimas 24 horas", "value": "last24h"},
-                                        {"label": "Última semana", "value": "last7d"},
+                                        {"label": "Últ. 24 hrs", "value": "last24h"},
+                                        {"label": "Últma semana", "value": "last7d"},
                                         {"label": "Último mes", "value": "last30d"},
                                         {"label": "Último año", "value": "last365d"},
                                     ],

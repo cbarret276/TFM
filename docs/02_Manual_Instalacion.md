@@ -1,12 +1,13 @@
-# 02 - Manual de Instalación
 
-Este documento describe el proceso de instalación y despliegue de **MalwareBI**, una plataforma contenerizada para el análisis visual de malware, desarrollada como parte de un Trabajo de Fin de Máster en Ciencia de Datos (UNED). La solución se ejecuta de forma local utilizando Docker y Docker Compose.
+# Manual de Instalación del Sistema
+
+Este documento describe paso a paso cómo instalar y poner en funcionamiento el sistema desde un entorno limpio, basado en Ubuntu Server y utilizando contenedores Docker. Está basado en los comandos ejecutados durante la puesta en marcha del trabajo.
 
 ---
 
 ## ✅ Requisitos previos
 
-Antes de instalar el sistema, asegúrese de disponer de lo siguiente:
+El despliegue del sistema va a requerir lo siguiente:
 
 - **Docker** versión 20 o superior
 - **Docker Compose** versión 2 o superior (integrado en Docker Desktop o como plugin)
@@ -17,34 +18,60 @@ Antes de instalar el sistema, asegúrese de disponer de lo siguiente:
   - `5601`: acceso a Kibana
   - `9200`: servicio de Elasticsearch
 
----
 
-## 📦 Clonación y despliegue
-
-Siga los siguientes pasos desde la terminal:
+## 🛠️ Instalación de dependencias necesarias
 
 ```bash
-git clone https://github.com/cbarret276/TFM.git
-cd TFM
-docker compose up --build
+sudo apt-get update
+sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
 ```
 
-Esto descargará el código, construirá las imágenes necesarias y levantará los contenedores definidos en `docker-compose.yml`.
+### Configurar repositorio oficial de Docker:
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+```
+
+### Instalar Docker y complementos:
+
+```bash
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+```
+
+> Verificar instalación:
+
+```bash
+docker --version
+docker compose version
+```
 
 ---
 
-## 🌐 Acceso a los servicios desplegados
+## 📁 Clonación del repositorio y preparación del entorno
 
-Una vez iniciado, podrá acceder a los distintos servicios a través del navegador:
+```bash
+cd /opt
+sudo mkdir malwarebi
+sudo chown $USER:$USER malwarebi
+cd malwarebi
 
-| Servicio       | URL                   |
-|----------------|------------------------|
-| Dashboard      | http://localhost:5173 |
-| Airflow        | http://localhost:8080 |
-| Elasticsearch  | http://localhost:9200 |
-| Kibana         | http://localhost:5601 |
-
----
+git clone https://github.com/cbarret276/TFM.git .
+```
 
 ## 🔐 Configuración de variables de entorno
 
@@ -83,6 +110,102 @@ Estos archivos no se incluye en el repositorio por razones de seguridad. Puedes 
 
 ---
 
+## 🔧 3. Despliegue de contenedores
+
+### Construir e iniciar servicios:
+
+```bash
+docker compose up --build -d
+```
+
+> Comprobar estado:
+
+```bash
+docker compose ps
+```
+
+---
+
+## 🌬️ Inicialización de Apache Airflow
+
+Acceder al contenedor:
+
+```bash
+docker compose exec airflow bash
+```
+
+Inicializar base de datos:
+
+```bash
+airflow db init
+```
+
+Crear usuario administrador:
+
+```bash
+airflow users create \
+    --username your_data_here \
+    --password your_data_here \
+    --firstname  \
+    --lastname your_data_here \
+    --role Admin \
+    --email your_data_here
+```
+
+Reiniciar el contenedor:
+
+```bash
+exit
+docker compose restart airflow
+```
+
+---
+
+## 📊 5. Comprobación de funcionamiento
+
+Comprobar logs de servicios:
+
+```bash
+docker compose logs -f airflow
+docker compose logs -f elasticsearch
+docker compose ps
+```
+
+---
+
+
+## 🧠 Notas finales
+
+- Si se transfiere una carpeta `data` de otro entorno para Elasticsearch, puede dar errores de permisos: se recomienda limpiarla y permitir que se regenere.
+
+
+---
+
+## ✅ Servicios por defecto
+
+| Servicio     | URL                        |
+|--------------|----------------------------|
+| Dashboard    | http://localhost:8050      |
+| Airflow      | http://localhost:8080      |
+| Elasticsearch| http://localhost:9200      |
+| Kibana       | http://localhost:5601      |
+
+
+## ✅ Comprobación
+
+Para verificar que todo funciona:
+
+1. Accede a http://localhost:5173 y comprueba que se carga la interfaz.
+2. En Airflow, verifica que los DAGs están disponibles y programados.
+3. Comprueba que Kibana se conecta al índice `bronze_mw_raw`.
+4. Asegúrate de que los filtros en el dashboard muestran datos reales.
+
+
+Este proceso está diseñado para ser reproducible en cualquier entorno compatible con Docker, sin necesidad de instalación adicional de dependencias ni configuración avanzada.
+
+
+---
+
 ## ⚙️ Personalización opcional
 
 El fichero `docker-compose.yml` permite modificar puertos, versiones o volúmenes si deseas adaptarlo a entornos específicos.
@@ -102,20 +225,3 @@ python App.py
 ```
 
 ⚠️ Para que funcione correctamente, necesitas tener un servidor Elasticsearch accesible en `localhost:9200` o configurarlo en `app_instance.py`.
-
----
-
-## ✅ Comprobación
-
-Para verificar que todo funciona:
-
-1. Accede a http://localhost:5173 y comprueba que se carga la interfaz.
-2. En Airflow, verifica que los DAGs están disponibles y programados.
-3. Comprueba que Kibana se conecta al índice `bronze_mw_raw`.
-4. Asegúrate de que los filtros en el dashboard muestran datos reales.
-
----
-
-Este proceso está diseñado para ser reproducible en cualquier entorno compatible con Docker, sin necesidad de instalación adicional de dependencias ni configuración avanzada.
-
-

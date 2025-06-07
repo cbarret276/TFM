@@ -205,7 +205,7 @@ def register_home_callbacks():
         df=pd.DataFrame(esc.fetch_aggreg_by_bins(
             start_dt,
             end_dt,
-            size=20
+            size=10
         ))
 
         # Filter by selected families
@@ -279,7 +279,7 @@ def register_home_callbacks():
 
 
         df = esc.fetch_ips_by_family_agg(
-            start_dt, end_dt, selected_families, size=100
+            start_dt, end_dt, selected_families, size=50
         )
         # Check if the DataFrame is empty or has no data
         if df.empty:

@@ -32,7 +32,7 @@ class ElasticContext:
         start_datetime=None,
         end_datetime=None,
         interval="1h",
-        size="100"):
+        size="50"):
 
         query = {
             "query": {
@@ -221,7 +221,8 @@ class ElasticContext:
         start_datetime,
         end_datetime,
         families,
-        group_by_family: bool = True
+        group_by_family: bool = True,
+        size=100
     ):
         """
         Query Elasticsearch to retrieve TTP counts grouped by family,
@@ -252,10 +253,10 @@ class ElasticContext:
         if group_by_family:
             agg_query = {
                 "family_count": {
-                    "terms": {"field": "family", "missing": "Desconocida", "size": 1000},
+                    "terms": {"field": "family", "missing": "Desconocida", "size": size},
                     "aggs": {
                         "ttps": {
-                            "terms": {"field": "ttp", "size": 1000}
+                            "terms": {"field": "ttp", "size": size}
                         }
                     }
                 }
@@ -263,10 +264,10 @@ class ElasticContext:
         else:
             agg_query = {
                 "ttp_count": {
-                    "terms": {"field": "ttp", "missing": "Desconocida", "size": 1000},
+                    "terms": {"field": "ttp", "missing": "Desconocida", "size": size*5},
                     "aggs": {
                         "families": {
-                            "terms": {"field": "family", "size": 1000}
+                            "terms": {"field": "family", "size": size}
                         }
                     }
                 }
@@ -654,8 +655,6 @@ class ElasticContext:
             for t in set(ttps):  # evitar duplicados internos
                 records.append({"country": country, "ttp": t})
 
-        print(f"-- Técnicas con país conocido: {len(records)}")
-
         # Parte 2: muestras sin país, geolocalizar por IP
         if infer_miss_count:
             missing_query = {
@@ -684,8 +683,6 @@ class ElasticContext:
                 ttps = src.get("ttp", [])
                 for t in set(ttps):
                     records.append({"country": inferred_country, "ttp": t})
-
-            print(f"-- Técnicas con país inferido: {len(records)}")
 
         # Agrupar por país y contar TTPs únicas
         df = pd.DataFrame(records)

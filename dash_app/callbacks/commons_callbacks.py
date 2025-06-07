@@ -152,12 +152,13 @@ def register_filters_callbacks():
                 stored_data.get("range")
             )
         else: 
-            start = datetime.now.replace(hour=0, minute=0, second=0)
+            start = datetime.now().replace(hour=0, minute=0, second=0)
             end = start + timedelta(days=1)
             start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
             end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
+            time_range = "last24h"
             return (
-                start, end, None, None
+                start, end, None, time_range
             )
 
  
@@ -176,6 +177,10 @@ def register_filters_callbacks():
         range_selected, manual_start, manual_end,
         stored_data
     ):
+        
+        if not stored_data:
+            return no_update, no_update, no_update, no_update
+
         triggered = ctx.triggered_id
         now = datetime.now(timezone.utc).replace(microsecond=0)
 
