@@ -1,4 +1,4 @@
-from dash import Input, Output, State, callback, Patch
+from dash import Input, Output, State, callback, Patch, no_update
 from dash_bootstrap_templates import template_from_url
 from app_instance import esc
 from utils.commons import format_number, utc_to_local, local_to_utc
@@ -445,6 +445,19 @@ def register_home_callbacks():
 
         return fig
 
+    # Click in family grahpbar update famili filter 
+    @callback(
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Input("graph-bar", "clickData"),
+        State("family-dropdown", "value"),
+        prevent_initial_call=True
+    )
+    def update_family_dropdown_from_bar(clickData, current_value):
+        if not clickData or "points" not in clickData:
+            return no_update
+
+        selected_family = clickData["points"][0]["y"]
+        return [selected_family]
 
     # Update figures with the new theme much faster
     @callback(

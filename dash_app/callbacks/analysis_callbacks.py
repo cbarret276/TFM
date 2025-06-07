@@ -9,7 +9,6 @@ import pandas as pd
 
 # This module contains the callbacks for the analysis page of the dashboard.
 def register_analysis_callbacks():
-
     # Callback for update aggrid
     @callback(
         Output("analysis-table", "columnDefs"),

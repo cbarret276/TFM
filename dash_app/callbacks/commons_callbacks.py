@@ -156,7 +156,7 @@ def register_filters_callbacks():
             end = start + timedelta(days=1)
             start = start.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
             end = end.astimezone().replace(microsecond=0).strftime("%Y-%m-%d %H:%M:%S")
-            time_range = "last24h"
+            time_range = "today"
             return (
                 start, end, None, time_range
             )

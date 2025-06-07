@@ -19,6 +19,6 @@ app = Dash(__name__,
 
 app.title = "Malware BI"
 
-host = os.environ.get("ELASTIC_HOST", "http://elasticsearch:9200")
+host = os.environ.get("ELASTIC_HOST", "http://localhost:9200")
 
 esc = ElasticContext(host=host)
