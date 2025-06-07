@@ -22,8 +22,8 @@ def serve_layout():
         children=html.Div([
             dcc.Store(data=session_id, id='session-id'),
             dcc.Store(id="screen-width", data=768),
-            dcc.Store(id="global-filters", storage_type="session"),
-            dcc.Store(id="user-timezone", storage_type="local"),
+            dcc.Store(id="global-filters"),
+            dcc.Store(id="user-timezone"),
             dcc.Interval(id='interval', interval=60000, n_intervals=0),
             dcc.Location(id="url"),
             top_navbar,

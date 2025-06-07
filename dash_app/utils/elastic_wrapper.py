@@ -597,19 +597,19 @@ class ElasticContext:
             
             df_samples = pd.DataFrame(sample_modif)
 
-            if aggregate_by_family:
-                df_grouped = df_samples.groupby(["country", "family"], as_index=False)["count"].sum()
-            else:
-                df_grouped = df_samples.groupby("country", as_index=False)["count"].sum()
-                df_grouped.rename(columns={"count": "sample_count"}, inplace=True)
-            
-            if with_coords:
-                df_grouped["latitude"] = df_grouped["country"].map(
-                    lambda c: self.country_mapping.get(c, {}).get("latitude"))
-                df_grouped["longitude"] = df_grouped["country"].map(
-                    lambda c: self.country_mapping.get(c, {}).get("longitude"))
-            data.extend(df_grouped.to_dict(orient="records"))
-
+            if not (df_samples.empty or "country" not in df_samples.columns):
+                if aggregate_by_family:
+                    df_grouped = df_samples.groupby(["country", "family"], as_index=False)["count"].sum()
+                else:
+                    df_grouped = df_samples.groupby("country", as_index=False)["count"].sum()
+                    df_grouped.rename(columns={"count": "sample_count"}, inplace=True)
+                
+                if with_coords:
+                    df_grouped["latitude"] = df_grouped["country"].map(
+                        lambda c: self.country_mapping.get(c, {}).get("latitude"))
+                    df_grouped["longitude"] = df_grouped["country"].map(
+                        lambda c: self.country_mapping.get(c, {}).get("longitude"))
+                data.extend(df_grouped.to_dict(orient="records"))
 
         return pd.DataFrame(data)
     
