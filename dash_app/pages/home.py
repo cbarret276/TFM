@@ -122,7 +122,6 @@ card2_2 = dbc.Card(
 
 
 # Card 3.1
-
 card3_1 = dbc.Card(
     dbc.CardBody(
         [

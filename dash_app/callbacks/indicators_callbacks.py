@@ -118,7 +118,7 @@ def register_indicators_callbacks():
             )
         ], style={"minHeight": "400px","width": "100%", "display": "flex", "flexDirection": "column"})
     
-
+    # Callback to update top IPs graph bar
     @callback(
         Output("top10-direcciones-ip", "figure"),
         [

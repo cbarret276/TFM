@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install Gunicorn for production
 RUN pip install gunicorn
 
-# Arranque dinámico según la variable GUNICORN_RELOAD_ARG
+# Arranque dinámico según var GUNICORN_RELOAD_ARG
 CMD ["sh", "-c", "gunicorn $GUNICORN_RELOAD_ARG --bind 0.0.0.0:${APP_PORT} App:server"]

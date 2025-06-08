@@ -21,7 +21,7 @@ analysis_table_component = AgGrid(
 )
 
 
-# Card 1: Tabla de análisis con dash_ag_grid
+# Analysis table with dash_ag_grid
 card_analysis_table = dbc.Card(
     dbc.CardBody(
         dcc.Loading(
@@ -52,13 +52,12 @@ sample_details_modal = dbc.Modal(
 # Content Layout
 layout = dbc.Container(
     [
-        # Title and global filters
         dbc.Row([
             dbc.Col(html.H4("Análisis de muestras", className="mt-md-3 title_page"), xs=12),
             dbc.Col(get_filters(), xs=12),  
         ], className="align-items-end gx-2"),
 
-        # Filtros de búsqueda
+        # Search filters
         dbc.Row([
             dbc.Col(
                 dcc.Dropdown(
@@ -90,7 +89,7 @@ layout = dbc.Container(
             )
         ]),
 
-        # Tabla principal
+        # Main table
         dbc.Row([
             dbc.Col(card_analysis_table, xs=12)
         ]),

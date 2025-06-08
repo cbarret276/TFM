@@ -46,9 +46,10 @@ register_tactics_callbacks()
 register_geolocation_callbacks()
 register_analysis_callbacks()
 
+# Prepare server for gunicorn deploy
 server = app.server
 
-# Run the app
+# Run the app locally
 if __name__ == '__main__':
     app.run(host="0.0.0.0", debug=True, port=5173)
     

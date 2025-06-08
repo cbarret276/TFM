@@ -21,12 +21,12 @@ def load_ttp_dict():
                 "name": row["name"],
                 "description": row["description"],
                 "url": row["url"],
-                "tactics": row["tactics"].split(", "),  # Divide tácticas en una lista
+                "tactics": row["tactics"].split(", "),  # Divide táctics in list
                 "detection": row["detection"],
                 "platforms": row["platforms"],
                 "defenses": row["defenses bypassed"],
                 "impact": row["impact type"],
-                # Agregar otros campos si es necesario
+                # Add other fields as necessary
             }
     return attack_mapping
 
@@ -103,7 +103,6 @@ def geolocate_ip_list(ip_list):
 def format_number(fstr, value):
     locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
-    # Formatea el número de forma abreviada
     if value >= 1_000_000_000:  # Billions
         short_value = f"{value / 1_000_000_000:.2f}"
         suffix = "B"
@@ -117,10 +116,8 @@ def format_number(fstr, value):
         short_value = f"{value:.2f}"
         suffix = ""
     
-    # Aplica los separadores de acuerdo al locale
     formatted_value = locale.format_string(fstr, float(short_value), grouping=True)
     
-    # Devuelve el número formateado con el sufijo
     return f"{formatted_value}{suffix}"
 
 # Shorten technique names for display

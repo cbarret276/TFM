@@ -38,10 +38,10 @@ top_navbar = dbc.Navbar(
 # Offcanvas sidebar menu for mobile devices
 mobile_sidebar = dbc.Offcanvas(
     id="offcanvas-menu",
-    title="Menu",  # Title of the offcanvas menu
+    title="Menu",  
     is_open=False,  # Initially closed
-    children=sidebar_mobile,  # resto del contenido de navegación móvil
-    placement="start",  # Sidebar slides in from the left
-    className="d-md-none",  # Visible only on extra small (xs) and small (sm) screens
-    style={"width": "16rem"}  # Set the width of the offcanvas menu
+    children=sidebar_mobile,  
+    placement="start",  
+    className="d-md-none",  
+    style={"width": "16rem"} 
 )

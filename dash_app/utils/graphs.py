@@ -58,7 +58,7 @@ def empty_figure(message="Sin datos"):
     )
     return fig
 
-# This function calculates the aggregation interval and normalizes 
+# Calculates the aggregation interval and normalizes 
 # the start and end datetimes.
 def calculate_interval_and_range(start, end):
     time_delta = (end - start).total_seconds()
@@ -74,14 +74,14 @@ def calculate_interval_and_range(start, end):
 
     return interval, start, end
 
-# This function assigns colors to categories based on their 
+# Assigns colors to categories based on their 
 # frequency in a DataFrame.
 def assign_color_sequence(df, palette):
     family_order = df.groupby("family")["count"].sum().sort_values(ascending=False).index
     color_map = {fam: palette[i % len(palette)] for i, fam in enumerate(family_order)}
     return color_map
 
-# This function creates a color function for word clouds that assigns 
+# Creates a color function for word clouds that assigns 
 # colors based on word frequency.
 def make_ordered_color_func(frequencies, cmap_name="tab20"):
     # Get ordered list of colors from colormap
@@ -100,7 +100,7 @@ def make_ordered_color_func(frequencies, cmap_name="tab20"):
 
     return color_func
 
-# This function generates a word cloud image from a frequency dictionary.
+# Generates a word cloud image from a frequency dictionary.
 def generate_wordcloud(frequencies, screen_width, theme = "light"):
     # Set background color based on theme
     bg_color = "white" if theme == "light" else "#212529"
@@ -113,7 +113,6 @@ def generate_wordcloud(frequencies, screen_width, theme = "light"):
         width=800
         height=400
 
-    # Create the WordCloud instance
     wc = WordCloud(
         width=width,
         height=height,
@@ -129,7 +128,6 @@ def generate_wordcloud(frequencies, screen_width, theme = "light"):
     buffer.seek(0)
     img_base64 = base64.b64encode(buffer.read()).decode("utf-8")
 
-    # Encode the PNG image in base64 to embed it in Dash as HTML img src
     return img_base64
 
 # Customize template object in map dark mode render
@@ -143,7 +141,6 @@ def custom_dark_template(custom_template):
             textfont=dict(color=FONT_DARK_COLOR)
         )
     ]
-
     return custom_template
 
 # Secure copy from layout template

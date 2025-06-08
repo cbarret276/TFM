@@ -175,7 +175,7 @@ def register_home_callbacks():
 
         return fig
 
-
+    # Clic and filter by family
     @callback(
         Output("family-dropdown", "value", allow_duplicate=True),
         Input("histogram-graph", "clickData"),
@@ -268,7 +268,7 @@ def register_home_callbacks():
         return fig
 
 
-    # Click in family grahpbar update famili filter 
+    # Click in family grahpbar and update filter by selected family
     @callback(
         Output("family-dropdown", "value", allow_duplicate=True),
         Input("graph-bar", "clickData"),

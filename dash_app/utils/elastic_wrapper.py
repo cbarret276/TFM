@@ -224,11 +224,6 @@ class ElasticContext:
         group_by_family: bool = True,
         size=100
     ):
-        """
-        Query Elasticsearch to retrieve TTP counts grouped by family,
-        then map each TTP to its tactic using local ATT&CK mapping.
-        """
-
         query_filters = [
             {
                 "range": {
@@ -336,9 +331,6 @@ class ElasticContext:
         interval="1d",
         families=None
     ):
-        """
-        Devuelve el número de TTPs agrupado por táctica y fecha.
-        """
         query_filters = [
             {
                 "range": {
@@ -655,7 +647,7 @@ class ElasticContext:
             for t in set(ttps):  # evitar duplicados internos
                 records.append({"country": country, "ttp": t})
 
-        # Parte 2: muestras sin país, geolocalizar por IP
+        # Part 2: samples with missing country, geolocate by IP
         if infer_miss_count:
             missing_query = {
                 "_source": ["ips", "ttp"],
@@ -684,7 +676,6 @@ class ElasticContext:
                 for t in set(ttps):
                     records.append({"country": inferred_country, "ttp": t})
 
-        # Agrupar por país y contar TTPs únicas
         df = pd.DataFrame(records)
         if df.empty:
             return pd.DataFrame(columns=["country", "ttp_count"])
