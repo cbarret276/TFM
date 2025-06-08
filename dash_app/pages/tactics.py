@@ -15,7 +15,8 @@ card1_1 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+    dbc.Tooltip("Número de tácticas de ataque detectadas en las muestras.", target="tactics_kpi1-value", placement="top")
     ])
 
 # Card 1.2
@@ -30,7 +31,8 @@ card1_2 = dbc.Card([
                     className="card-kpi-value",
                 ),            
             ])
-        )
+    ),
+    dbc.Tooltip("Número de técnicas de ataque detectadas en las muestras.", target="tactics_kpi2-value", placement="top")
     ])
 
 # Card 1.3
@@ -45,7 +47,8 @@ card1_3 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+    ),
+    dbc.Tooltip("Número de técnicas de ataque detectadas con impacto en disponibilidad.", target="tactics_kpi3-value", placement="top")
     ])
 
 # Card 1.4
@@ -60,7 +63,8 @@ card1_4 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+    ),
+    dbc.Tooltip("Número de plataformas objetivo de las técnicas.", target="tactics_kpi4-value", placement="top")
     ])
 
 
@@ -126,6 +130,7 @@ card3_2 = dbc.Card(
                     className="w-100 h-100"
                 ),
             ),
+            dbc.Tooltip("Haz clic para filtrar por la familia asociada.", target="heatmap-tactics-families", placement="top")
         ],
         className="p-0"
     ),

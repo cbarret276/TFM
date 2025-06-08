@@ -1,9 +1,9 @@
-from dash import Input, Output, State, callback, Patch
+from dash import Input, Output, State, callback, Patch, no_update
 from dash_bootstrap_templates import template_from_url
 from app_instance import esc
 from layouts.sidebar import theme_changer_aio
 from utils.graphs import empty_figure, adjust_palette
-from utils.commons import shorten, local_to_utc
+from utils.commons import shorten, local_to_utc, format_number
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.io as pio
@@ -54,7 +54,7 @@ def register_tactics_callbacks():
 
         # Filter out empty
         if df.empty:
-            return "--", "--", "--", "--"
+            return "0", "0", "0", "0"
 
         # KPI 1: Unique tactics
         num_tactics = df["tactic"].nunique()
@@ -70,8 +70,12 @@ def register_tactics_callbacks():
         flat_platforms = set(p.strip() for sublist in all_platforms for p in sublist)
         num_platforms = len(flat_platforms)
 
-        return str(num_tactics), str(num_techniques), str(num_impact), str(num_platforms)
-
+        return (
+            format_number("%d", num_tactics),
+            format_number("%d", num_techniques),
+            format_number("%d", num_impact),
+            format_number("%d", num_platforms)
+        )
 
     # Callback to update the Sankey diagrams
     @callback(
@@ -363,6 +367,22 @@ def register_tactics_callbacks():
             )
 
         return fig
+
+    # Click in heatmap update family filter 
+    @callback(
+        Output("family-dropdown", "value", allow_duplicate=True),
+        Input("heatmap-tactics-families", "clickData"),
+        prevent_initial_call=True
+    )
+    def update_family_dropdown_from_heatmap(clickData):
+        if not clickData or "points" not in clickData:
+            return no_update
+
+        family = clickData["points"][0].get("x", "").strip()
+        if not family:
+            return no_update
+
+        return [family]
 
     # Callback to update themes
     @callback(

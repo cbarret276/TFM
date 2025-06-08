@@ -94,7 +94,6 @@ sidebar = html.Div(
 
 sidebar_mobile = html.Div(
     [
-        
         dbc.Nav(
             [
                 dbc.NavLink([html.I(className="fas fa-chart-pie me-2"), html.Span("Panorámica")], href="/", active="exact"),
@@ -105,6 +104,7 @@ sidebar_mobile = html.Div(
             ],
             vertical=True,
             pills=True
-        )
+        ),
+        
     ]
 )

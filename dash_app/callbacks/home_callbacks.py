@@ -46,9 +46,6 @@ def register_home_callbacks():
                 families=families
         )
 
-        if results is None:
-            return "--", "--", "--", "--", "--"
-
         # KPIs
         total_records = results["total_records"]
         total_records_malware = results["total_records_malware"]
@@ -386,6 +383,7 @@ def register_home_callbacks():
 
         return fig
 
+    # Click in map update family filter 
     @callback(
         Output("family-dropdown", "value", allow_duplicate=True),
         Input("map", "clickData"),

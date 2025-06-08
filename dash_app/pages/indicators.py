@@ -14,7 +14,8 @@ card1_1 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+        dbc.Tooltip("Número de indicadores de compromiso detectados.", target="ioc_kpi1-value", placement="top")
     ])
 
 # Card 1.2
@@ -29,7 +30,8 @@ card1_2 = dbc.Card([
                     className="card-kpi-value",
                 ),            
             ])
-        )
+        ),
+        dbc.Tooltip("Número de direcciones IP detectadas como indicador de compromiso.", target="ioc_kpi2-value", placement="top")
     ])
 
 # Card 1.3
@@ -44,7 +46,8 @@ card1_3 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+        dbc.Tooltip("Número de dominios detectados como indicador de compromiso.", target="ioc_kpi3-value", placement="top")
     ])
 
 # Card 1.4
@@ -59,7 +62,8 @@ card1_4 = dbc.Card([
                     className="card-kpi-value",
                 ),
             ])
-        )
+        ),
+        dbc.Tooltip("Promedio de score de peligrosidad de las muestras con indicador de compromiso.", target="ioc_kpi4-value", placement="top")
     ])
 
 

@@ -43,9 +43,6 @@ def register_indicators_callbacks():
         # Fetch IOC data for KPI calculation
         results = esc.fetch_gold(start_dt, end_dt, families=families)
 
-        if results is None:
-            return ["--", "--", "--", "--"]
-
         # KPIs        
         score_mean = results["avg_score"] if results["avg_score"] else 0
         unique_domains = results["unique_domains"]

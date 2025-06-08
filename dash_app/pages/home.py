@@ -94,7 +94,8 @@ card2_1 = dbc.Card(
                     id="histogram-graph", 
                     className="w-100 h-100"
                 )
-            )
+            ),
+            dbc.Tooltip("Haz clic sobre un elemento del gráfico para filtrar por la familia asociada.", target="histogram-graph", placement="top")
         ],
         className="p-0"
     ),
@@ -112,6 +113,7 @@ card2_2 = dbc.Card(
                     className="w-100 h-100"
                 ),
             ),
+            dbc.Tooltip("Haz clic sobre un elemento del gráfico para filtrar por la familia asociada.", target="graph-bar", placement="top")
         ],
         className="p-0"
     ),
@@ -130,7 +132,8 @@ card3_1 = dbc.Card(
                     id="map",
                     className="w-100 h-100"
                 ),
-            )
+            ),
+            dbc.Tooltip("Haz clic sobre un indicador para filtrar por la familia asociada.", target="map", placement="top")
         ],
         className="p-0"
     ),
