@@ -45,14 +45,25 @@ def register_indicators_callbacks():
 
         # KPIs        
         score_mean = results["avg_score"] if results["avg_score"] else 0
-        unique_domains = results["unique_domains"]
-        unique_ips = results["unique_ips"]
+
+        df = esc.fetch_iocs_counts_by_family(
+            start_dt, 
+            end_dt, 
+            families,
+            size=100
+        )
+        # Check if the DataFrame is empty or has no data
+        if df.empty:
+            unique_domains = unique_ips = 0
+        else:
+            unique_domains = df["ip_count"].sum()
+            unique_ips = df["domain_count"].sum()
         ioc_num = unique_domains + unique_ips
 
         return (
-            format_number("%.1f", ioc_num),
-            format_number("%.1f", unique_ips),
-            format_number("%.1f", unique_domains),
+            format_number("%d", ioc_num),
+            format_number("%d", unique_ips),
+            format_number("%d", unique_domains),
             format_number("%.2f", score_mean),
         )
 
@@ -215,17 +226,19 @@ def register_indicators_callbacks():
 
         if df.empty or df["count"].sum() == 0:
             return empty_figure()
-
-        df = df.dropna(subset=["confidence_level", "threat_type", "malware", "country"])
-        df["confidence_level"] = df["confidence_level"].astype(str)
-
-        all_labels = pd.unique(df[["ip", "confidence_level", "threat_type", "malware", "country"]].values.ravel())
+        
+        enrich_columns = ["confidence_level", "threat_type", "malware"]
+        if  set(enrich_columns).issubset(df.columns):
+            columns = ["ip", "confidence_level", "threat_type", "malware", "country"]
+        else:
+            columns = ["ip", "country"]
+        
+        all_labels = pd.unique(df[columns].values.ravel())
         idx_map = {label: i for i, label in enumerate(all_labels)}
         palette = adjust_palette(len(all_labels))
 
         sources, targets, values = [], [], []
-        for col1, col2 in zip(["ip", "confidence_level", "threat_type", "malware"],
-                            ["confidence_level", "threat_type", "malware", "country"]):
+        for col1, col2 in zip(columns[:-1],columns[1:]):
             grouped = df.groupby([col1, col2])["count"].sum().reset_index()
             for _, row in grouped.iterrows():
                 src, tgt = row[col1], row[col2]

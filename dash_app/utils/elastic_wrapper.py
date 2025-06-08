@@ -168,7 +168,12 @@ class ElasticContext:
         return ip_counts, domain_counts, ttp_counts
 
     # Method to fetch IPs by family using aggregations
-    def fetch_ips_by_family_agg(self, start_dt, end_dt, families=None, size=200):
+    def fetch_ips_by_family_agg(
+        self, start_dt, end_dt, 
+        families=None, 
+        size_family=50,
+        size_ips=100
+    ):
         filters = [
             {"range": {
                 "created": {
@@ -190,10 +195,10 @@ class ElasticContext:
             },
             "aggs": {
                 "by_family": {
-                    "terms": {"field": "family", "size": size},
+                    "terms": {"field": "family", "size": size_family},
                     "aggs": {
                         "by_ip": {
-                            "terms": {"field": "ips", "size": size}
+                            "terms": {"field": "ips", "size": size_ips}
                         }
                     }
                 }
@@ -211,6 +216,60 @@ class ElasticContext:
                     "family": family,
                     "count": ip_bucket["doc_count"]
                 })
+
+        return pd.DataFrame(results)
+
+    # Fetch from bronze silver iocs stats by family
+    def fetch_iocs_counts_by_family(
+        self, start_dt, end_dt, 
+        families=None, size=200
+    ):
+        filters = [
+            {
+                "range": {
+                    "created": {
+                        "gte": start_dt,
+                        "lte": end_dt,
+                        "format": "strict_date_optional_time"
+                    }
+                }
+            },
+            {"exists": {"field": "ips"}},
+            {"exists": {"field": "domains"}}
+        ]
+
+        if families:
+            filters.append({"terms": {"family": families}})
+
+        query = {
+            "size": 0,
+            "query": {
+                "bool": {"filter": filters}
+            },
+            "aggs": {
+                "by_family": {
+                    "terms": {"field": "family", "size": size},
+                    "aggs": {
+                        "unique_ips": {
+                            "cardinality": {"field": "ips"}
+                        },
+                        "unique_domains": {
+                            "cardinality": {"field": "domains"}
+                        }
+                    }
+                }
+            }
+        }
+
+        response = self.es.search(index=self.BRONZE_INDEX, body=query)
+
+        results = []
+        for bucket in response["aggregations"]["by_family"]["buckets"]:
+            results.append({
+                "family": bucket["key"],
+                "ip_count": bucket["unique_ips"]["value"],
+                "domain_count": bucket["unique_domains"]["value"]
+            })
 
         return pd.DataFrame(results)
 
@@ -689,7 +748,7 @@ class ElasticContext:
     def build_ip_enrichment_dataframe(
         self, start_datetime, end_datetime, 
         families=None, 
-        size=1000, enrich=True
+        size=500, enrich=True
     ):
         ip_counts, _, _ = self.fetch_aggregated_iocs(start_datetime, end_datetime, families, size=size)
         if not ip_counts:
@@ -721,7 +780,8 @@ class ElasticContext:
                     })
 
             df_enriched = pd.DataFrame(enriched_data)
-            df = pd.merge(df, df_enriched, on="ip", how="inner")
+            if not df_enriched.empty:
+                df = pd.merge(df, df_enriched, on="ip", how="inner")
 
         geo_data = geolocate_ip_list(df["ip"].tolist())
         if not geo_data:

@@ -51,8 +51,19 @@ def register_home_callbacks():
         total_records_malware = results["total_records_malware"]
         score_mean = results["avg_score"] if results["avg_score"] else 0
         family_num = results["family_num"]
-        unique_domains = results["unique_domains"]
-        unique_ips = results["unique_ips"]
+        
+        df = esc.fetch_iocs_counts_by_family(
+            start_dt, 
+            end_dt, 
+            families,
+            size=100
+        )
+        # Check if the DataFrame is empty or has no data
+        if df.empty:
+            unique_domains = unique_ips = 0
+        else:
+            unique_domains = df["ip_count"].sum()
+            unique_ips = df["domain_count"].sum()
         ioc_num = unique_domains + unique_ips
 
         return (
@@ -60,7 +71,7 @@ def register_home_callbacks():
             format_number("%.1f", total_records_malware),
             format_number("%.2f", score_mean),
             format_number("%d", family_num),
-            format_number("%.1f", ioc_num)
+            format_number("%d", ioc_num)
         )
 
     # Update temporal histogram
@@ -311,12 +322,15 @@ def register_home_callbacks():
         end_dt = pd.to_datetime(end_date).tz_localize(tz_data).tz_convert("UTC").isoformat()
 
         df = esc.fetch_ips_by_family_agg(
-            start_dt, end_dt, selected_families, size=20
+            start_dt, end_dt, 
+            selected_families, 
+            size_family=20,
+            size_ips=70
         )
         # Check if the DataFrame is empty or has no data
         if df.empty:
             return empty_figure()
-    
+
         # Filter by selected families
         if selected_families not in (None, []):
             df = df[df["family"].isin(selected_families)]
