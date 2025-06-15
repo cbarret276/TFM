@@ -2,11 +2,13 @@ from elasticsearch import Elasticsearch
 from utils.commons import geolocate_ip_list
 from utils.commons import load_ttp_dict, load_country_dict
 import pandas as pd
+import os
 
 class ElasticContext:
-    def __init__(self, host="http://elasticsearch:9200"):
+    def __init__(self, host):
         self.es = Elasticsearch(
-            hosts=[host],
+            host,
+            basic_auth=(os.getenv("ELASTIC_USER"), os.getenv("ELASTIC_PASSWORD")),
             max_retries=5,
             retry_on_timeout=True,
             timeout=30,

@@ -57,7 +57,7 @@ INDEX_SETTINGS = {
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2025, 5, 10, 13, 30), # days_ago(6)
+    'start_date': datetime(2025, 5, 1, 0, 0), # days_ago(6)
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,
@@ -75,18 +75,16 @@ dag = DAG(
 
 # Elasticsearch connection setup
 def get_elasticsearch_client():
-    """Creates and returns an Elasticsearch client."""
     return Elasticsearch(
-        ["http://elasticsearch:9200"],  # Elasticsearch host URL
+        os.getenv("ELASTIC_HOST"),
+        http_auth=(os.getenv("ELASTIC_USER"), os.getenv("ELASTIC_PASSWORD")),
         request_timeout=60,  # Request timeout in seconds
         max_retries=5,  # Number of retries on failure
         retry_on_timeout=True  # Retry if timeout occurs
     )
 
-
 # Function to fetch sample IDs for a dynamic time range
 def fetch_sample_ids(**context):
-    """Fetches sample IDs from Triage API within the specified time range."""
     # Extract time range for query
     data_interval_start = context['data_interval_start'].replace(microsecond=0).isoformat().replace('+00:00', 'Z')
     data_interval_end = context['data_interval_end'].replace(microsecond=0).isoformat().replace('+00:00', 'Z')
@@ -132,8 +130,6 @@ def fetch_sample_ids(**context):
 
 # Transform data to the desired schema
 def transform_data(data):
-    """Transforms the raw API response into the desired format for Elasticsearch."""
-
     domains, ips, urls, ttp, family = [], [], [], [], []
 
     if "family" in data.get("analysis", {}):
@@ -171,8 +167,6 @@ def transform_data(data):
 
 # Fetch sample details and store in Elasticsearch
 def fetch_sample_details(samples, **context):
-    """Fetches details of each sample and indexes them into Elasticsearch."""
-
     # Configurar conexión a persistencia
     es = get_elasticsearch_client()
     headers = {'Authorization': f"Bearer {TRIAGE_API_KEY}"}

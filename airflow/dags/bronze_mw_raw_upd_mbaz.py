@@ -20,13 +20,13 @@ if not API_KEY:
 
 # Define the DAG
 default_args = {
-    'owner': 'airflow',  # DAG owner name
-    'depends_on_past': False,  # Doesn't depend on past DAG runs
-    'start_date': datetime(2025, 5, 28, 13, 30), # days_ago(6) # Start
-    'email_on_failure': False,  # No email notifications on failure
-    'email_on_retry': False,  # No email notifications on retry
-    'retries': 3,  # Number of retries for each task
-    'retry_delay': timedelta(minutes=1),  # Delay between retries
+    'owner': 'airflow',  
+    'depends_on_past': False,  
+    'start_date': datetime(2025, 5, 1, 0, 0), 
+    'email_on_failure': False,  
+    'email_on_retry': False,  
+    'retries': 3,  
+    'retry_delay': timedelta(minutes=1),  
 }
 
 dag = DAG(
@@ -40,9 +40,9 @@ dag = DAG(
 
 # Elasticsearch connection setup
 def get_elasticsearch_client():
-    """Creates and returns an Elasticsearch client."""
     return Elasticsearch(
-        ["http://elasticsearch:9200"],  # Elasticsearch host URL
+        os.getenv("ELASTIC_HOST"),  # Elasticsearch host URL
+        http_auth=(os.getenv("ELASTIC_USER"), os.getenv("ELASTIC_PASSWORD")),
         request_timeout=60,  # Request timeout in seconds
         max_retries=5,  # Number of retries on failure
         retry_on_timeout=True  # Retry if timeout occurs
@@ -66,8 +66,6 @@ wait_for_bronze_dag = ExternalTaskSensor(
 
 # Fetch hashes from Elasticsearch based on processed time windows
 def fetch_hashes_from_elastic(**context):
-    """Fetches hashes for samples processed by the Triage DAG."""
-
     # Get time window
     start_date = context['data_interval_start'].replace(microsecond=0).isoformat().replace('+00:00', 'Z')
     end_date = context['data_interval_end'].replace(microsecond=0).isoformat().replace('+00:00', 'Z')
@@ -101,7 +99,6 @@ def fetch_hashes_from_elastic(**context):
 
 # Transform the raw API response into the desired format
 def transform_data(data, record_id):
-    """Transforms the raw API response into the desired format."""
     return {
         "_id": record_id,  # Include Elasticsearch _id
         "sha256": data.get("sha256_hash", {}),
@@ -113,7 +110,6 @@ def transform_data(data, record_id):
 
 # Define a function to fetch data for a single hash
 def fetch_data(hash_record):
-    """Fetches data for a single hash."""
     headers = {'API_KEY': f"{API_KEY}"}
     sha256 = hash_record["sha256"]
     record_id = hash_record["_id"]  # Include _id in the response
@@ -135,7 +131,6 @@ def fetch_data(hash_record):
 
 # Query Malware Bazaar API for additional information
 def query_malware_bazaar(hashes, **context):
-    """Queries Malware Bazaar for information on given hashes."""
     results = []    
     samples = ast.literal_eval(hashes)
 
@@ -159,7 +154,6 @@ def query_malware_bazaar(hashes, **context):
 
 # Update Elasticsearch with new data from Malware Bazaar
 def update_elastic_with_bazaar_data(bazaar_data, **context):
-    """Updates Elasticsearch with data fetched from Malware Bazaar."""
     es = get_elasticsearch_client()
 
     # Prepare data for bulk update

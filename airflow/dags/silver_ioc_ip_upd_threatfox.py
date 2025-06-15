@@ -25,7 +25,7 @@ if not THREATFOX_API_KEY:
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2025, 5, 29, 14), #days_ago(6),
+    'start_date': datetime(2025, 5, 1, 0), #days_ago(6),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 3,
@@ -40,8 +40,15 @@ dag = DAG(
     catchup=True
 )
 
+# Elasticsearch connection setup
 def get_elasticsearch_client():
-    return Elasticsearch(["http://elasticsearch:9200"], request_timeout=60)
+    return Elasticsearch(
+        os.getenv("ELASTIC_HOST"),  # Elasticsearch host URL
+        http_auth=(os.getenv("ELASTIC_USER"), os.getenv("ELASTIC_PASSWORD")),
+        request_timeout=60,  # Request timeout in seconds
+        max_retries=5,  # Number of retries on failure
+        retry_on_timeout=True  # Retry if timeout occurs
+    )
 
 
 def parse_first_seen(date_str):
@@ -94,7 +101,6 @@ def extract_ips_from_bronze(**context):
     return list(ip_set)
 
 def enrich_ip(ip, headers, now, ttl_threshold, es):
-    
     payload = {
         "query": "search_ioc",
         "search_term": ip

@@ -6,8 +6,10 @@ services:
   elasticsearch:
     build: ./elastic/.
     container_name: elastic-container
+    env_file:
+      - .env_elastic  # Environment variables 
     ports:
-      - 9200:9200 # REST API port for Elasticsearch
+      - 127.0.0.1:9200:9200 # REST API port for Elasticsearch, only local access
     volumes:
       - ./elastic/data:/usr/share/elasticsearch/data  # Mount persistent volume for index storage 
 
@@ -33,6 +35,8 @@ services:
   kibana:
     build: ./kibana/.
     container_name: kibana-container
+    env_file:
+      - .env_kibana
     ports:
       - "5601:5601"  # Kibana Web UI port
     depends_on:

@@ -4,8 +4,7 @@ FROM elasticsearch:8.15.3
 # Environment
 ENV discovery.type=single-node  \     
     ES_JAVA_OPTS='-Xmx6g -Xms6g -XX:+UseG1GC' \
-#    ELASTIC_PASSWORD="elastic"
-    xpack.security.enabled=false \
+    xpack.security.enabled=true \
     xpack.security.enrollment.enabled=false \
     http.cors.enabled=true \
     http.cors.allow-origin='http://gunicorn:5173' \
